@@ -14,6 +14,8 @@
 
 #include "Vec3D.h"
 
+using namespace std;
+
 class RayTracer {
 public:
     static RayTracer * getInstance ();

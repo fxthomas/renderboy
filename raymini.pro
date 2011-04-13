@@ -33,6 +33,9 @@ SOURCES = Window.cpp \
           
 DESTDIR = .
 
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+
 QT_VERSION=$$[QT_VERSION]
 
 

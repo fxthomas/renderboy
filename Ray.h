@@ -10,9 +10,14 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <cstdio>
 
 #include "Vec3D.h"
 #include "BoundingBox.h"
+#include "Scene.h"
+
+using namespace std;
 
 class Ray {
 public:
@@ -27,6 +32,9 @@ public:
     inline Vec3Df & getDirection () { return direction; }
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
+		bool intersect (const Object & object, const Triangle & tri, Vec3Df & intersectionPoint, float & ir) const;
+		bool intersect (const Object & object, Vec3Df & intersectionPoint, float & ir) const;
+		bool intersect (const Scene & scene, Vec3Df & intersectionPoint) const;
     
 private:
     Vec3Df origin;

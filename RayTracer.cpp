@@ -48,7 +48,8 @@ QImage RayTracer::render (const Vec3Df & camPos,
     const Vec3Df & maxBb = bbox.getMax ();
     const Vec3Df rangeBb = maxBb-minBb;
     
-    for (unsigned int i = 0; i < screenWidth; i++)
+    for (unsigned int i = 0; i < screenWidth; i++) {
+				cout << "Done: " << float(i)/float(screenWidth)*100. << "%" << endl;
         for (unsigned int j = 0; j < screenHeight; j++) {
             float tanX = tan (fieldOfView);
             float tanY = tanX/aspectRatio;
@@ -59,13 +60,16 @@ QImage RayTracer::render (const Vec3Df & camPos,
             dir.normalize ();
             Ray ray (camPos, dir);
             Vec3Df intersectionPoint;
-            bool hasIntersection = ray.intersect (bbox, intersectionPoint);
-            Vec3Df c (backgroundColor);
-            if (hasIntersection)
-                c = 255.f * ((intersectionPoint - minBb) / rangeBb);
+						bool hasIntersection = ray.intersect (*scene, intersectionPoint);
+						Vec3Df c (backgroundColor);
+            if (hasIntersection) {
+								//cout << "Intersect!" << endl;
+                c = Vec3Df (255, 255, 255);
+						}
             image.setPixel (i, ((screenHeight-1)-j), qRgb (clamp (c[0], 0, 255),
                                                        clamp (c[1], 0, 255),
                                                        clamp (c[2], 0, 255)));
         }
+		}
     return image;
 }
