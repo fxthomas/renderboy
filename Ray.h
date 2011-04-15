@@ -32,10 +32,10 @@ public:
     inline Vec3Df & getDirection () { return direction; }
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
-		bool intersect (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, Vec3Df & intersectionPoint, float & ir) const;
-		bool intersect (const Object & object, const Triangle & tri, Vec3Df & intersectionPoint, float & ir) const;
-		bool intersect (const Object & object, Vec3Df & intersectionPoint, float & ir) const;
-		bool intersect (const Scene & scene, Vec3Df & intersectionPoint, Object& intersectionObject) const;
+		bool intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const;
+		bool intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir) const;
+		bool intersect (const Object & object, Vertex & intersectionPoint, float & ir) const;
+		bool intersect (const Scene & scene, Vertex & intersectionPoint, Object& intersectionObject) const;
     
 private:
     Vec3Df origin;

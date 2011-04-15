@@ -70,11 +70,11 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
  *
  * @see http://fr.wikipedia.org/wiki/Lancer_de_rayon#Exemple_du_calcul_de_l.27intersection_d.27un_rayon_et_d.27un_triangle
  */
-bool Ray::intersect (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, Vec3Df & intersectionPoint, float & ir) const {
-	Vec3Df u = v1 - v0;
-	Vec3Df v = v2 - v0;
+bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const {
+	Vec3Df u = v1.getPos() - v0.getPos();
+	Vec3Df v = v2.getPos() - v0.getPos();
 	Vec3Df nn = Vec3Df::crossProduct(u, v);
-	Vec3Df otr = origin - v0;
+	Vec3Df otr = origin - v0.getPos();
 	Vec3Df otrv = Vec3Df::crossProduct (otr, v);
 	Vec3Df uotr = Vec3Df::crossProduct (u, otr);
 
@@ -86,7 +86,7 @@ bool Ray::intersect (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, Ve
 	// We return the intersection point
 	bool hasIntersection = (0 <= iu && iu <= 1 && 0 <= iv && iv <= 1 && ir >= 0 && iu + iv <= 1);
 	if (hasIntersection) {
-		intersectionPoint = origin + ir*direction;
+		intersectionPoint = Vertex (origin + ir*direction, nn);
 	}
  
 	// We return true if the ray really intersects
@@ -96,23 +96,23 @@ bool Ray::intersect (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, Ve
 /**
  * Computes the intersection of a light ray and a triangle
  */
-bool Ray::intersect (const Object & object, const Triangle & tri, Vec3Df & intersectionPoint, float & ir) const {
-	Vec3Df v0 = object.getMesh().getVertices()[tri.getVertex(0)].getPos();
-	Vec3Df v1 = object.getMesh().getVertices()[tri.getVertex(1)].getPos();
-	Vec3Df v2 = object.getMesh().getVertices()[tri.getVertex(2)].getPos();
+bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir) const {
+	Vertex v0 = object.getMesh().getVertices()[tri.getVertex(0)];
+	Vertex v1 = object.getMesh().getVertices()[tri.getVertex(1)];
+	Vertex v2 = object.getMesh().getVertices()[tri.getVertex(2)];
 	return intersect (v0, v1, v2, intersectionPoint, ir);
 }
 
 /**
  * Tests intersection with an object
  */
-bool Ray::intersect (const Object & object, Vec3Df & intersectionPoint, float & ir) const {
+bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir) const {
 	ir = INFINITY;
 	bool hasIntersection = false;
 
 	float tmpIr = 0.;
 	bool tmpIntersection = false;
-	Vec3Df tmpPoint;
+	Vertex tmpPoint;
 	for (unsigned int i = 0; i < object.getMesh().getTriangles().size(); i++) {
 		Triangle tri = object.getMesh().getTriangles()[i];
 		tmpIntersection = intersect (object, tri, tmpPoint, tmpIr);
@@ -130,13 +130,13 @@ bool Ray::intersect (const Object & object, Vec3Df & intersectionPoint, float & 
 /**
  * Tests intersection with the scene
  */
-bool Ray::intersect (const Scene & scene, Vec3Df & intersectionPoint, Object & intersectionObject) const {
+bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, Object & intersectionObject) const {
 	float ir = INFINITY;
 	bool hasIntersection = false;
 
 	float tmpIr = 0.;
 	bool tmpIntersection = false;
-	Vec3Df tmpPoint;
+	Vertex tmpPoint;
 	for (vector<Object>::const_iterator obj = scene.getObjects().begin(); obj != scene.getObjects().end(); obj++) {
 		tmpIntersection = intersect (*obj, tmpPoint, tmpIr);
 		if (tmpIntersection) {
