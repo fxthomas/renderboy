@@ -32,6 +32,17 @@ public:
                    float aspectRatio,
                    unsigned int screenWidth,
                    unsigned int screenHeight);
+
+    void debug (const Vec3Df & camPos,
+                   const Vec3Df & viewDirection,
+                   const Vec3Df & upVector,
+                   const Vec3Df & rightVector,
+                   float fieldOfView,
+                   float aspectRatio,
+                   unsigned int screenWidth,
+                   unsigned int screenHeight,
+									 unsigned int i,
+									 unsigned int j);
     
 protected:
     inline RayTracer () {}

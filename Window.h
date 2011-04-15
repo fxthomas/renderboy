@@ -12,12 +12,14 @@
 #include <QSpinBox>
 #include <QImage>
 #include <QLabel>
+#include <QMouseEvent>
 
 #include <vector>
 #include <string>
 
 #include "QTUtils.h"
 #include "GLViewer.h"
+#include "QClickableLabel.hpp"
 
 class Window : public QMainWindow {
     Q_OBJECT
@@ -33,6 +35,7 @@ public slots :
     void exportGLImage ();
     void exportRayImage ();
     void about ();
+		void displayPointInfo (QMouseEvent* me);
     
 private :
     
@@ -43,7 +46,7 @@ private :
     QString currentDirectory;
 
     GLViewer * viewer;
-    QLabel * imageLabel;
+    QClickableLabel * imageLabel;
     QImage rayImage;
 };
 

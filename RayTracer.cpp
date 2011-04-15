@@ -50,6 +50,7 @@ QImage RayTracer::render (const Vec3Df & camPos,
     
     for (unsigned int i = 0; i < screenWidth; i++) {
 				cout << "Done: " << float(i)/float(screenWidth)*100. << "%" << endl;
+#pragma omp parallel for schedule(static) default(shared)
         for (unsigned int j = 0; j < screenHeight; j++) {
             float tanX = tan (fieldOfView);
             float tanY = tanX/aspectRatio;
@@ -60,11 +61,12 @@ QImage RayTracer::render (const Vec3Df & camPos,
             dir.normalize ();
             Ray ray (camPos, dir);
             Vec3Df intersectionPoint;
-						bool hasIntersection = ray.intersect (*scene, intersectionPoint);
+						Object intersectionObject;
+						bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject);
 						Vec3Df c (backgroundColor);
             if (hasIntersection) {
 								//cout << "Intersect!" << endl;
-                c = Vec3Df (255, 255, 255);
+                c = intersectionObject.getMaterial().getColor() * 255;
 						}
             image.setPixel (i, ((screenHeight-1)-j), qRgb (clamp (c[0], 0, 255),
                                                        clamp (c[1], 0, 255),
@@ -72,4 +74,39 @@ QImage RayTracer::render (const Vec3Df & camPos,
         }
 		}
     return image;
+}
+
+void RayTracer::debug (const Vec3Df & camPos,
+                          const Vec3Df & direction,
+                          const Vec3Df & upVector,
+                          const Vec3Df & rightVector,
+                          float fieldOfView,
+                          float aspectRatio,
+                          unsigned int screenWidth,
+                          unsigned int screenHeight,
+													unsigned int i,
+													unsigned int j) {
+    Scene * scene = Scene::getInstance ();
+    const BoundingBox & bbox = scene->getBoundingBox ();
+    const Vec3Df & minBb = bbox.getMin ();
+    const Vec3Df & maxBb = bbox.getMax ();
+    const Vec3Df rangeBb = maxBb-minBb;
+    
+		float tanX = tan (fieldOfView);
+		float tanY = tanX/aspectRatio;
+		Vec3Df stepX = (float (i) - screenWidth/2.f)/screenWidth * tanX * rightVector;
+		Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
+		Vec3Df step = stepX + stepY;
+		Vec3Df dir = direction + step;
+		dir.normalize ();
+		Ray ray (camPos, dir);
+		Vec3Df intersectionPoint;
+		Object intersectionObject;
+		bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject);
+		if (hasIntersection) {
+				cout << " (I) Intersection" << endl;
+				cout << " (I) Material: " << intersectionObject.getMaterial() << endl;
+		} else {
+			cout << " (I) No intersection" << endl;
+		}
 }

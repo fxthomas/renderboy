@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Base Script File (pub.sh)
+# Created: Wed 13 Apr 2011 06:10:49 PM CEST
+# Version: 1.0
+#
+# This Bash script was developped by François-Xavier Thomas.
+# You are free to copy, adapt or modify it.
+# If you do so, however, leave my name somewhere in the credits, I'd appreciate it ;)
+# 
+# (ɔ) François-Xavier Thomas <fx.thomas@gmail.com>
+
+hg push ssh://hg@bitbucket.org/fxthomas/renderboy
+

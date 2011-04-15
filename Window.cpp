@@ -47,7 +47,7 @@ Window::Window () : QMainWindow (NULL) {
     QGroupBox * renderingGroupBox = new QGroupBox (this);
     QHBoxLayout * renderingLayout = new QHBoxLayout (renderingGroupBox);
     
-    imageLabel = new QLabel;
+    imageLabel = new QClickableLabel;
     imageLabel->setBackgroundRole (QPalette::Base);
     imageLabel->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel->setScaledContents (true);
@@ -126,6 +126,26 @@ void Window::about () {
                         "<b>RayMini</b> <br> by <i>Tamy Boubekeur</i>.");
 }
 
+void Window::displayPointInfo (QMouseEvent* me) {
+	qglviewer::Camera * cam = viewer->camera ();
+	RayTracer * rayTracer = RayTracer::getInstance ();
+	qglviewer::Vec p = cam->position ();
+	qglviewer::Vec d = cam->viewDirection ();
+	qglviewer::Vec u = cam->upVector ();
+	qglviewer::Vec r = cam->rightVector ();
+	Vec3Df camPos (p[0], p[1], p[2]);
+	Vec3Df viewDirection (d[0], d[1], d[2]);
+	Vec3Df upVector (u[0], u[1], u[2]);
+	Vec3Df rightVector (r[0], r[1], r[2]);
+	float fieldOfView = cam->horizontalFieldOfView ();
+	float aspectRatio = cam->aspectRatio ();
+	unsigned int screenWidth = cam->screenWidth ();
+	unsigned int screenHeight = cam->screenHeight ();
+	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
+	rayTracer->debug (camPos, viewDirection, upVector, rightVector,
+																fieldOfView, aspectRatio, screenWidth, screenHeight, (unsigned int)me->x(), screenHeight - (unsigned int)me->y() + 1);
+}
+
 void Window::initControlWidget () {
     controlWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (controlWidget);
@@ -158,6 +178,7 @@ void Window::initControlWidget () {
     QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
     rayLayout->addWidget (rayButton);
     connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
+		connect (imageLabel, SIGNAL (clicked(QMouseEvent*)), this, SLOT (displayPointInfo(QMouseEvent*)));
 
     QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
