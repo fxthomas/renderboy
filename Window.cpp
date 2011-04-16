@@ -77,20 +77,7 @@ Window::~Window () {
 void Window::renderRayImage () {
     qglviewer::Camera * cam = viewer->camera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
-    qglviewer::Vec p = cam->position ();
-    qglviewer::Vec d = cam->viewDirection ();
-    qglviewer::Vec u = cam->upVector ();
-    qglviewer::Vec r = cam->rightVector ();
-    Vec3Df camPos (p[0], p[1], p[2]);
-    Vec3Df viewDirection (d[0], d[1], d[2]);
-    Vec3Df upVector (u[0], u[1], u[2]);
-    Vec3Df rightVector (r[0], r[1], r[2]);
-    float fieldOfView = cam->horizontalFieldOfView ();
-    float aspectRatio = cam->aspectRatio ();
-    unsigned int screenWidth = cam->screenWidth ();
-    unsigned int screenHeight = cam->screenHeight ();
-    rayImage = rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                                  fieldOfView, aspectRatio, screenWidth, screenHeight);
+    rayImage = rayTracer->render (cam);
     imageLabel->setPixmap (QPixmap::fromImage (rayImage));
     
 }
@@ -129,21 +116,8 @@ void Window::about () {
 void Window::displayPointInfo (QMouseEvent* me) {
 	qglviewer::Camera * cam = viewer->camera ();
 	RayTracer * rayTracer = RayTracer::getInstance ();
-	qglviewer::Vec p = cam->position ();
-	qglviewer::Vec d = cam->viewDirection ();
-	qglviewer::Vec u = cam->upVector ();
-	qglviewer::Vec r = cam->rightVector ();
-	Vec3Df camPos (p[0], p[1], p[2]);
-	Vec3Df viewDirection (d[0], d[1], d[2]);
-	Vec3Df upVector (u[0], u[1], u[2]);
-	Vec3Df rightVector (r[0], r[1], r[2]);
-	float fieldOfView = cam->horizontalFieldOfView ();
-	float aspectRatio = cam->aspectRatio ();
-	unsigned int screenWidth = cam->screenWidth ();
-	unsigned int screenHeight = cam->screenHeight ();
 	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
-	rayTracer->debug (camPos, viewDirection, upVector, rightVector,
-																fieldOfView, aspectRatio, screenWidth, screenHeight, (unsigned int)me->x(), screenHeight - (unsigned int)me->y() + 1);
+	rayTracer->debug (cam, (unsigned int)me->x(), cam->screenHeight() - (unsigned int)me->y() + 1);
 }
 
 void Window::initControlWidget () {

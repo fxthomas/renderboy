@@ -165,17 +165,21 @@ void Mesh::renderGL (bool flat) const {
         Vertex v[3];
         for (unsigned int j = 0; j < 3; j++)
             v[j] = vertices[t.getVertex(j)];
+
         if (flat) {
             Vec3Df normal = Vec3Df::crossProduct (v[1].getPos () - v[0].getPos (),
                                                   v[2].getPos () - v[0].getPos ());
             normal.normalize ();
             glNormalVec3Df (normal);
         }
-        for (unsigned int j = 0; j < 3; j++) 
+
+        for (unsigned int j = 0; j < 3; j++) {
+						if (v[j].isMarked()) glColor3f (1.f, 0.f, 0.f);
             if (!flat)
                 glDrawPoint (v[j]);
             else
                 glVertexVec3Df (v[j].getPos ());
+				}
     }
     glEnd ();
 }

@@ -71,8 +71,8 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
  * @see http://fr.wikipedia.org/wiki/Lancer_de_rayon#Exemple_du_calcul_de_l.27intersection_d.27un_rayon_et_d.27un_triangle
  */
 bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const {
-	Vec3Df u = v1.getPos() - v0.getPos();
-	Vec3Df v = v2.getPos() - v0.getPos();
+	Vec3Df v = v1.getPos() - v0.getPos();
+	Vec3Df u = v2.getPos() - v0.getPos();
 	Vec3Df nn = Vec3Df::crossProduct(u, v);
 	Vec3Df otr = origin - v0.getPos();
 	Vec3Df otrv = Vec3Df::crossProduct (otr, v);
@@ -86,7 +86,8 @@ bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Ve
 	// We return the intersection point
 	bool hasIntersection = (0 <= iu && iu <= 1 && 0 <= iv && iv <= 1 && ir >= 0 && iu + iv <= 1);
 	if (hasIntersection) {
-		intersectionPoint = Vertex (origin + ir*direction, nn);
+		nn.normalize();
+		intersectionPoint = Vertex (origin + ir*direction, v0.getNormal());
 	}
  
 	// We return true if the ray really intersects
@@ -106,7 +107,7 @@ bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & inter
 /**
  * Tests intersection with an object
  */
-bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir) const {
+bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
 	ir = INFINITY;
 	bool hasIntersection = false;
 
@@ -120,6 +121,7 @@ bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & 
 			hasIntersection = true;
 			if (tmpIr < ir) {
 				ir = tmpIr;
+				triangle = i;
 				intersectionPoint = tmpPoint;
 			}
 		}
@@ -130,22 +132,24 @@ bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & 
 /**
  * Tests intersection with the scene
  */
-bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, Object & intersectionObject) const {
+bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, Object & intersectionObject, unsigned int & triangle) const {
 	float ir = INFINITY;
 	bool hasIntersection = false;
 
 	float tmpIr = 0.;
 	bool tmpIntersection = false;
 	Vertex tmpPoint;
+	unsigned int tritri;
 	for (vector<Object>::const_iterator obj = scene.getObjects().begin(); obj != scene.getObjects().end(); obj++) {
-		tmpIntersection = intersect (*obj, tmpPoint, tmpIr);
+		tmpIntersection = intersect (*obj, tmpPoint, tmpIr, tritri);
 		if (tmpIntersection) {
 			hasIntersection = true;
 			if (tmpIr < ir) {
+				triangle = tritri;
 				intersectionObject = *obj;
 				ir = tmpIr;
 				intersectionPoint = tmpPoint;
-			}
+			} //else cout << tmpIr << endl;
 		}
 	}
 	return hasIntersection;

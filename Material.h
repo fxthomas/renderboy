@@ -17,27 +17,30 @@
 
 class Material {
 public:
-    inline Material () : diffuse (0.8f), specular (0.2f), color (0.5f, 0.5f, 0.5f)  {}
-    inline Material (float diffuse, float specular, const Vec3Df & color)
-        : diffuse (diffuse), specular (specular), color (color) {}
+    inline Material () : diffuse (0.8f), specular (0.2f), shine (1.0f), color (0.5f, 0.5f, 0.5f)  {}
+    inline Material (float diffuse, float specular, float shine, const Vec3Df & color)
+        : diffuse (diffuse), specular (specular), shine (shine), color (color) {}
     virtual ~Material () {}
 
     inline float getDiffuse () const { return diffuse; }
+		inline float getShininess () const { return shine; }
     inline float getSpecular () const { return specular; }
     inline Vec3Df getColor () const { return color; }
 
     inline void setDiffuse (float d) { diffuse = d; }
+		inline void setShininess (float sh) { shine = sh; }
     inline void setSpecular (float s) { specular = s; }
     inline void setColor (const Vec3Df & c) { color = c; }
 
 private:
     float diffuse;
     float specular;
+		float shine;
     Vec3Df color;
 };
 
 inline std::ostream & operator<< (std::ostream & out, const Material & m) {
-	out << "[Di: " << m.getDiffuse() << " | Sp: " << m.getSpecular() << " | Col: " << m.getColor() << "]";
+	out << "[Di: " << m.getDiffuse() << " | Sp: " << m.getSpecular() << "/" << m.getShininess() << " | Col: " << m.getColor() << "]";
 	return out;
 }
 

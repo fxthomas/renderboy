@@ -32,22 +32,18 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (const Vec3Df & camPos,
-                          const Vec3Df & direction,
-                          const Vec3Df & upVector,
-                          const Vec3Df & rightVector,
-                          float fieldOfView,
-                          float aspectRatio,
-                          unsigned int screenWidth,
-                          unsigned int screenHeight,
-													unsigned int i,
-													unsigned int j, bool debug) {
+Vec3Df RayTracer::raytraceSingle (qglviewer::Camera *cam, unsigned int i,	unsigned int j, bool debug) {
 	Scene * scene = Scene::getInstance ();
-	const BoundingBox & bbox = scene->getBoundingBox ();
-	const Vec3Df & minBb = bbox.getMin ();
-	const Vec3Df & maxBb = bbox.getMax ();
-	const Vec3Df rangeBb = maxBb-minBb;
 	
+	const Vec3Df camPos (cam->position()[0], cam->position()[1], cam->position()[2]);
+	const Vec3Df direction (cam->viewDirection()[0], cam->viewDirection()[1], cam->viewDirection()[2]);
+	const Vec3Df upVector (cam->upVector()[0], cam->upVector()[1], cam->upVector()[2]);
+	const Vec3Df rightVector (cam->rightVector()[0], cam->rightVector()[1], cam->rightVector()[2]);
+	float fieldOfView = cam->horizontalFieldOfView();
+	float aspectRatio = cam->aspectRatio();
+	unsigned int screenWidth = cam->screenWidth();
+	unsigned int screenHeight = cam->screenHeight();
+
 	float tanX = tan (fieldOfView);
 	float tanY = tanX/aspectRatio;
 	Vec3Df stepX = (float (i) - screenWidth/2.f)/screenWidth * tanX * rightVector;
@@ -58,52 +54,66 @@ Vec3Df RayTracer::raytraceSingle (const Vec3Df & camPos,
 	Ray ray (camPos, dir);
 	Vertex intersectionPoint;
 	Object intersectionObject;
-	bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject);
+	unsigned int triangle;
+	bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject, triangle);
 	if (hasIntersection) {
 		if (debug) {
 			cout << " (I) Intersection" << endl;
-			cout << " (I) Material: " << intersectionObject.getMaterial() << endl;
+			cout << " (I) Object number of triangles: " << intersectionObject.getMesh().getTriangles().size() << endl;
+			cout << " (I) Intersection with triangle: " << triangle << endl;
+			cout << " (I) Material: " << intersectionObject.getMaterial() << endl << endl;
 		}
 
 		Vec3Df c = intersectionObject.getMaterial().getColor();
-		float Dr = 0.;
-		float Dg = 0.;
-		float Db = 0.;
-		float Sr = 0.;
-		float Sg = 0.;
-		float Sb = 0.;
+		Vec3Df diffuse;
+		Vec3Df specular;
 
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
-			Vec3Df lm = light->getPos() - intersectionPoint.getPos();
+			Vec3Df lpos = GLViewer::toWorld (cam, light->getPos());
+			Vec3Df lm = lpos - intersectionPoint.getPos();
 			lm.normalize();
 			Vec3Df vv = camPos - intersectionPoint.getPos();
 			vv.normalize();
+
+			// Diffuse Light
 			float sc = Vec3D<float>::dotProduct(lm, intersectionPoint.getNormal());
-
-			Dr += c[0]*sc;
-			Dg += c[1]*sc;
-			Db += c[2]*sc;
-
-			/*sc = Vec3D<float>::dotProduct(v.n*sc*2.f-lm, vv);
 			if (sc > 0.) {
-				sc = pow (sc, shine);
-				Sr += c[0]*sc;
-				Sg += c[1]*sc;
-				Sb += c[2]*sc;
-			}*/
-		}
-		c[0] = intersectionObject.getMaterial().getDiffuse()*Dr + intersectionObject.getMaterial().getSpecular()*Sr;
-		c[1] = intersectionObject.getMaterial().getDiffuse()*Dg + intersectionObject.getMaterial().getSpecular()*Sg;
-		c[2] = intersectionObject.getMaterial().getDiffuse()*Db + intersectionObject.getMaterial().getSpecular()*Sb;
+				diffuse = light->getColor() * sc;
+			}
 
+			// Specular Light
+			sc = Vec3D<float>::dotProduct(intersectionPoint.getNormal()*sc*2.f-lm, vv);
+			if (sc > 0.) {
+				sc = pow (sc, intersectionObject.getMaterial().getShininess() * 12.8f);
+				specular = light->getColor() * sc;
+			}
+
+			// Raytracing debug
+			if (debug) {
+				cout << " ------ Light -------" << endl;
+				cout << " (I) Normal: " << intersectionPoint.getNormal() << endl;
+				cout << " (I) Diffuse Factor: " << sc << endl;
+				cout << " (I) Diffuse Color: " << diffuse << endl;
+				cout << " (I) Specular Factor: " << sc << endl;
+				cout << " (I) Specular Color: " << specular << endl << endl;
+			}
+		}
+
+		// Total color blend
+		c[0] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[0]*diffuse[0] + intersectionObject.getMaterial().getSpecular()*specular[0]);
+		c[1] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[1]*diffuse[1] + intersectionObject.getMaterial().getSpecular()*specular[1]);
+		c[2] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[2]*diffuse[2] + intersectionObject.getMaterial().getSpecular()*specular[2]);
+
+		// Debug total color
 		if (debug) {
+			cout << " ------ Color blend ------" << endl;
 			cout << " (I) Computed Color: " << c << endl;
-			cout << " (I) Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl;
+			cout << " (I) Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
 		}
 
 		return c;
 	} else {
-		if (debug) cout << " (I) No intersection" << endl;
+		if (debug) cout << " (I) No intersection" << endl << endl;
 		return backgroundColor;
 	}
 }
@@ -111,42 +121,26 @@ Vec3Df RayTracer::raytraceSingle (const Vec3Df & camPos,
 /**
  * Renders the given scene with the given camera parameters into a QImage, and returns it.
  */
-QImage RayTracer::render (const Vec3Df & camPos,
-                          const Vec3Df & direction,
-                          const Vec3Df & upVector,
-                          const Vec3Df & rightVector,
-                          float fieldOfView,
-                          float aspectRatio,
-                          unsigned int screenWidth,
-                          unsigned int screenHeight) {
-	QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
+QImage RayTracer::render (qglviewer::Camera *cam) {
+	// Create an image to hold the final raytraced render
+	QImage image (QSize (cam->screenWidth(), cam->screenHeight()), QImage::Format_RGB888);
 	
-	Scene * scene = Scene::getInstance ();
-	const BoundingBox & bbox = scene->getBoundingBox ();
-	const Vec3Df & minBb = bbox.getMin ();
-	const Vec3Df & maxBb = bbox.getMax ();
-	const Vec3Df rangeBb = maxBb-minBb;
-	
-	for (unsigned int i = 0; i < screenWidth; i++) {
-		cout << "Done: " << float(i)/float(screenWidth)*100. << "%" << endl;
+	// For each camera pixel, cast a ray and compute its reflecting color
+	for (unsigned int i = 0; i < (unsigned int)cam->screenWidth(); i++) {
+		cout << "Done: " << float(i)/float(cam->screenWidth())*100. << "%" << endl;
+
 #pragma omp parallel for schedule(static) default(shared)
-		for (unsigned int j = 0; j < screenHeight; j++) {
-			Vec3Df c = raytraceSingle (camPos, direction, upVector, rightVector, fieldOfView, aspectRatio, screenWidth, screenHeight, i, j, false);
-			image.setPixel (i, ((screenHeight-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
+		for (unsigned int j = 0; j < (unsigned int)cam->screenHeight(); j++) {
+			Vec3Df c = raytraceSingle (cam, i, j, false);
+			image.setPixel (i, ((cam->screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
 		}
+
 	}
+
+	// Return image
 	return image;
 }
 
-void RayTracer::debug (const Vec3Df & camPos,
-                          const Vec3Df & direction,
-                          const Vec3Df & upVector,
-                          const Vec3Df & rightVector,
-                          float fieldOfView,
-                          float aspectRatio,
-                          unsigned int screenWidth,
-                          unsigned int screenHeight,
-													unsigned int i,
-													unsigned int j) {
-	raytraceSingle (camPos, direction, upVector, rightVector, fieldOfView, aspectRatio, screenWidth, screenHeight, i, j, true);
+void RayTracer::debug (qglviewer::Camera *cam, unsigned int i, unsigned int j) {
+	raytraceSingle (cam, i, j, true);
 }

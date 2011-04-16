@@ -290,6 +290,8 @@ public:
                       n[0]*q[0] + n[1]*q[1] + n[2]*q[2]);
     }
 
+		inline const T* getData() const { return p; };
+
 protected:
     T p[3];
 };

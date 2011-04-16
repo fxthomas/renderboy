@@ -12,6 +12,8 @@
 #include <vector>
 #include <QImage>
 
+#include "GLViewer.h"
+#include <QGLViewer/camera.h>
 #include "Vec3D.h"
 
 using namespace std;
@@ -24,37 +26,9 @@ public:
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
-    Vec3Df raytraceSingle (const Vec3Df & camPos,
-                   const Vec3Df & viewDirection,
-                   const Vec3Df & upVector,
-                   const Vec3Df & rightVector,
-                   float fieldOfView,
-                   float aspectRatio,
-                   unsigned int screenWidth,
-                   unsigned int screenHeight,
-									 unsigned int i,
-									 unsigned int j,
-									 bool debug);
-
-    QImage render (const Vec3Df & camPos,
-                   const Vec3Df & viewDirection,
-                   const Vec3Df & upVector,
-                   const Vec3Df & rightVector,
-                   float fieldOfView,
-                   float aspectRatio,
-                   unsigned int screenWidth,
-                   unsigned int screenHeight);
-
-    void debug (const Vec3Df & camPos,
-                   const Vec3Df & viewDirection,
-                   const Vec3Df & upVector,
-                   const Vec3Df & rightVector,
-                   float fieldOfView,
-                   float aspectRatio,
-                   unsigned int screenWidth,
-                   unsigned int screenHeight,
-									 unsigned int i,
-									 unsigned int j);
+    Vec3Df raytraceSingle (qglviewer::Camera *cam, unsigned int i, unsigned int j, bool debug);
+    QImage render (qglviewer::Camera *cam);
+    void debug (qglviewer::Camera *cam, unsigned int i, unsigned int j);
     
 protected:
     inline RayTracer () {}

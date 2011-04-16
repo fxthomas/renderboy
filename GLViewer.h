@@ -10,6 +10,7 @@
 #define GLVIEWER_H
 
 #include <QGLViewer/qglviewer.h>
+#include <QGLViewer/camera.h>
 #include <vector>
 #include <string>
 
@@ -35,6 +36,12 @@ public:
     private:
         std::string message;
     }; 
+
+		static inline Vec3Df toWorld (qglviewer::Camera * cam, const Vec3Df & v) {
+			float nv[3];
+			cam->getWorldCoordinatesOf (v.getData(), nv);
+			return Vec3Df (nv);
+		}
      
 public slots :
     void setWireframe (bool b);
