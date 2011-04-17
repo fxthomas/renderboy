@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Scene.h"
+#include "Camera.hpp"
 
 class GLViewer : public QGLViewer  {
     Q_OBJECT
@@ -27,6 +28,7 @@ public:
     
     inline bool isWireframe () const { return wireframe; }
     inline int getRenderingMode () const { return renderingMode; }
+		inline Camera getCamera () const { return Camera (*(this->camera())); }
     
     class Exception  {
     public:
@@ -36,12 +38,6 @@ public:
     private:
         std::string message;
     }; 
-
-		static inline Vec3Df toWorld (qglviewer::Camera * cam, const Vec3Df & v) {
-			float nv[3];
-			cam->getWorldCoordinatesOf (v.getData(), nv);
-			return Vec3Df (nv);
-		}
      
 public slots :
     void setWireframe (bool b);

@@ -32,17 +32,17 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (qglviewer::Camera *cam, unsigned int i,	unsigned int j, bool debug) {
+Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned int j, bool debug) {
 	Scene * scene = Scene::getInstance ();
 	
-	const Vec3Df camPos (cam->position()[0], cam->position()[1], cam->position()[2]);
-	const Vec3Df direction (cam->viewDirection()[0], cam->viewDirection()[1], cam->viewDirection()[2]);
-	const Vec3Df upVector (cam->upVector()[0], cam->upVector()[1], cam->upVector()[2]);
-	const Vec3Df rightVector (cam->rightVector()[0], cam->rightVector()[1], cam->rightVector()[2]);
-	float fieldOfView = cam->horizontalFieldOfView();
-	float aspectRatio = cam->aspectRatio();
-	unsigned int screenWidth = cam->screenWidth();
-	unsigned int screenHeight = cam->screenHeight();
+	const Vec3Df camPos = cam.position();
+	const Vec3Df direction = cam.viewDirection();
+	const Vec3Df upVector = cam.upVector();
+	const Vec3Df rightVector = cam.rightVector();
+	float fieldOfView = cam.horizontalFieldOfView();
+	float aspectRatio = cam.aspectRatio();
+	unsigned int screenWidth = cam.screenWidth();
+	unsigned int screenHeight = cam.screenHeight();
 
 	float tanX = tan (fieldOfView);
 	float tanY = tanX/aspectRatio;
@@ -69,7 +69,7 @@ Vec3Df RayTracer::raytraceSingle (qglviewer::Camera *cam, unsigned int i,	unsign
 		Vec3Df specular;
 
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
-			Vec3Df lpos = GLViewer::toWorld (cam, light->getPos());
+			Vec3Df lpos = cam.toWorld (light->getPos());
 			Vec3Df lm = lpos - intersectionPoint.getPos();
 			lm.normalize();
 			Vec3Df vv = camPos - intersectionPoint.getPos();
@@ -121,18 +121,18 @@ Vec3Df RayTracer::raytraceSingle (qglviewer::Camera *cam, unsigned int i,	unsign
 /**
  * Renders the given scene with the given camera parameters into a QImage, and returns it.
  */
-QImage RayTracer::render (qglviewer::Camera *cam) {
+QImage RayTracer::render (const Camera & cam) {
 	// Create an image to hold the final raytraced render
-	QImage image (QSize (cam->screenWidth(), cam->screenHeight()), QImage::Format_RGB888);
+	QImage image (QSize (cam.screenWidth(), cam.screenHeight()), QImage::Format_RGB888);
 	
 	// For each camera pixel, cast a ray and compute its reflecting color
-	for (unsigned int i = 0; i < (unsigned int)cam->screenWidth(); i++) {
-		cout << "Done: " << float(i)/float(cam->screenWidth())*100. << "%" << endl;
+	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
+		cout << "Done: " << float(i)/float(cam.screenWidth())*100. << "%" << endl;
 
 #pragma omp parallel for schedule(static) default(shared)
-		for (unsigned int j = 0; j < (unsigned int)cam->screenHeight(); j++) {
+		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			Vec3Df c = raytraceSingle (cam, i, j, false);
-			image.setPixel (i, ((cam->screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
+			image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
 		}
 
 	}
@@ -141,6 +141,6 @@ QImage RayTracer::render (qglviewer::Camera *cam) {
 	return image;
 }
 
-void RayTracer::debug (qglviewer::Camera *cam, unsigned int i, unsigned int j) {
+void RayTracer::debug (const Camera & cam, unsigned int i, unsigned int j) {
 	raytraceSingle (cam, i, j, true);
 }

@@ -75,7 +75,7 @@ Window::~Window () {
 }
 
 void Window::renderRayImage () {
-    qglviewer::Camera * cam = viewer->camera ();
+    Camera cam = viewer->getCamera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
     rayImage = rayTracer->render (cam);
     imageLabel->setPixmap (QPixmap::fromImage (rayImage));
@@ -114,10 +114,10 @@ void Window::about () {
 }
 
 void Window::displayPointInfo (QMouseEvent* me) {
-	qglviewer::Camera * cam = viewer->camera ();
+	Camera cam = viewer->getCamera ();
 	RayTracer * rayTracer = RayTracer::getInstance ();
 	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
-	rayTracer->debug (cam, (unsigned int)me->x(), cam->screenHeight() - (unsigned int)me->y() + 1);
+	rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1);
 }
 
 void Window::initControlWidget () {

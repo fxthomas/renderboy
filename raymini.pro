@@ -3,6 +3,7 @@ TARGET   = raymini
 CONFIG  += qt opengl warn_on release thread
 
 HEADERS = Window.h \
+          Camera.hpp \
           GLViewer.h \
           QTUtils.h \
           Vertex.h \
@@ -18,6 +19,7 @@ HEADERS = Window.h \
 					QClickableLabel.hpp
 
 SOURCES = Window.cpp \
+          Camera.cpp \
           GLViewer.cpp \
           QTUtils.cpp \
           Vertex.cpp \

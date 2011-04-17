@@ -18,6 +18,7 @@
 #include <string>
 
 #include "QTUtils.h"
+#include "Camera.hpp"
 #include "GLViewer.h"
 #include "QClickableLabel.hpp"
 
