@@ -14,6 +14,7 @@
 
 #include "Camera.hpp"
 #include "Vec3D.h"
+#include "KDTreeNode.hpp"
 
 using namespace std;
 

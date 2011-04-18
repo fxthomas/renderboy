@@ -3,7 +3,6 @@ TARGET   = raymini
 CONFIG  += qt opengl warn_on release thread
 
 HEADERS = Window.h \
-          Camera.hpp \
           GLViewer.h \
           QTUtils.h \
           Vertex.h \
@@ -16,10 +15,11 @@ HEADERS = Window.h \
           Scene.h \
           RayTracer.h \
           Ray.h \
-					QClickableLabel.hpp
+          Camera.hpp \
+					QClickableLabel.hpp \
+					KDTreeNode.hpp
 
 SOURCES = Window.cpp \
-          Camera.cpp \
           GLViewer.cpp \
           QTUtils.cpp \
           Vertex.cpp \
@@ -33,7 +33,9 @@ SOURCES = Window.cpp \
           RayTracer.cpp \
           Ray.cpp \
 					QClickableLabel.cpp \
-          Main.cpp 
+          Camera.cpp \
+          Main.cpp \
+					KDTreeNode.cpp
           
 DESTDIR = .
 

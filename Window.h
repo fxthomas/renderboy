@@ -21,6 +21,7 @@
 #include "Camera.hpp"
 #include "GLViewer.h"
 #include "QClickableLabel.hpp"
+#include "KDTreeNode.hpp"
 
 class Window : public QMainWindow {
     Q_OBJECT

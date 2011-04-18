@@ -50,7 +50,8 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 	Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
 	Vec3Df step = stepX + stepY;
 	Vec3Df dir = direction + step;
-	dir.normalize ();
+	if (debug) cout << " (I) Ray Direction: " << dir << endl;
+
 	Ray ray (camPos, dir);
 	Vertex intersectionPoint;
 	Object intersectionObject;
@@ -58,6 +59,13 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 	bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject, triangle);
 	if (hasIntersection) {
 		if (debug) {
+			cout << " (I) Computing KD-Tree..." << endl;
+			KDTreeNode kt (cam, intersectionObject.getMesh());
+			vector<unsigned int> ktf = kt.find (intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(0)].getPos());
+			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(0)].getPos() << endl;
+			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(1)].getPos() << endl;
+			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(2)].getPos() << endl;
+			for (vector<unsigned int>::iterator it = ktf.begin(); it != ktf.end(); it++) cout << intersectionObject.getMesh().getVertices()[*it].getPos() << endl;
 			cout << " (I) Intersection" << endl;
 			cout << " (I) Object number of triangles: " << intersectionObject.getMesh().getTriangles().size() << endl;
 			cout << " (I) Intersection with triangle: " << triangle << endl;

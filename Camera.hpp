@@ -12,7 +12,11 @@
 
 #pragma once
 #include <QGLViewer/camera.h>
+#include <iostream>
+
 #include "Vec3D.h"
+
+using namespace std;
 
 /**
  * Camera Class
@@ -69,12 +73,12 @@ class Camera {
 			vs[1] /= vs[3];
 			vs[2] /= vs[3];
 
-			vs[0] = vs[0] * 0.5 + 0.5;
-			vs[1] = vs[1] * 0.5 + 0.5;
-			vs[2] = vs[2] * 0.5 + 0.5;
+			vs[0] = vs[0]*0.5 + 0.5;
+			vs[1] = vs[1]*0.5 + 0.5;
+			vs[2] = vs[2]*0.5 + 0.5;
 
-			vs[0] = vs[0] * viewport[2] + viewport[0];
-			vs[1] = vs[1] * viewport[3] + viewport[1];
+			vs[0] = vs[0]*viewport[2] + viewport[0];
+			vs[1] = vs[1]*viewport[3] + viewport[1];
 
 			return Vec3Df (vs[0], viewport[3]-vs[1], vs[2]);
 		}
@@ -112,12 +116,12 @@ class Camera {
 		/**
 		 * Returns horizontal FOV
 		 */
-		inline int horizontalFieldOfView () const { return camera.horizontalFieldOfView(); }
+		inline float horizontalFieldOfView () const { return camera.horizontalFieldOfView(); }
 
 		/**
 		 * Returns aspect ratio
 		 */
-		inline int aspectRatio() const { return camera.aspectRatio(); }
+		inline float aspectRatio() const { return camera.aspectRatio(); }
 		
 	protected:
 		qglviewer::Camera camera;
