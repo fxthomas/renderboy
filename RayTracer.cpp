@@ -60,13 +60,15 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 	if (hasIntersection) {
 		if (debug) {
 			cout << " (I) Computing KD-Tree..." << endl;
-			KDTreeNode kt (cam, intersectionObject.getMesh());
-			vector<unsigned int> ktf = kt.find (intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(0)].getPos());
+			KDTreeNode kt (&intersectionObject.getMesh());
+			KDTreeNode ktf = kt.find (intersectionPoint.getPos());
+			cout << " (I) KDTree Bounds : [Min: " << ktf.getBoundingBox().getMin() << ", Max: " << ktf.getBoundingBox().getMax() << "]" << endl;
 			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(0)].getPos() << endl;
 			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(1)].getPos() << endl;
 			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(2)].getPos() << endl;
-			for (vector<unsigned int>::iterator it = ktf.begin(); it != ktf.end(); it++) cout << intersectionObject.getMesh().getVertices()[*it].getPos() << endl;
-			cout << " (I) Intersection" << endl;
+			for (vector<unsigned int>::iterator it = ktf.getVertices().begin(); it != ktf.getVertices().end(); it++) cout << intersectionObject.getMesh().getVertices()[*it].getPos() << endl;
+			for (vector<unsigned int>::iterator it = ktf.getTriangles().begin(); it != ktf.getTriangles().end(); it++) cout << "Triangle " << *it << endl;
+			cout << " (I) Intersection with " << intersectionPoint.getPos() << endl;
 			cout << " (I) Object number of triangles: " << intersectionObject.getMesh().getTriangles().size() << endl;
 			cout << " (I) Intersection with triangle: " << triangle << endl;
 			cout << " (I) Material: " << intersectionObject.getMaterial() << endl << endl;

@@ -16,9 +16,9 @@
 #include <ctime>
 
 #include "Mesh.h"
+#include "BoundingBox.h"
 #include "Vertex.h"
 #include "Vec3D.h"
-#include "Camera.hpp"
 
 using namespace std;
 
@@ -36,13 +36,14 @@ class KDTreeNode {
 		void loadVertices (vector<unsigned int> & verts, unsigned int axis);
 
 		float split;
-		Mesh mesh;
-		Camera cam;
+		const Mesh *mesh;
 		KDTreeNode *kleft;
 		KDTreeNode *kright;
 		vector <unsigned int> data;
+		vector <unsigned int> triangles;
+		BoundingBox bbox;
 
-		vector<unsigned int> _find (const Vec3Df & v, unsigned int axis) const;
+		const KDTreeNode & _find (const Vec3Df & v, unsigned int axis) const;
 
 	public:
 		/**
@@ -56,7 +57,7 @@ class KDTreeNode {
 		 * @see load
 		 * @author François-Xavier Thomas
 		 */
-		KDTreeNode(const Camera & cam) : split(0),cam(cam),kleft(NULL),kright(NULL) { }
+		KDTreeNode() : split(0),kleft(NULL),kright(NULL) { }
 
 		/**
 		 * Class destructor
@@ -71,13 +72,14 @@ class KDTreeNode {
 		 * 
 		 * @author François-Xavier Thomas
 		 */
-		KDTreeNode(const Camera & cam, const Mesh & m) : mesh(m),cam(cam),kleft(NULL),kright(NULL) { load (); }
+		KDTreeNode(const Mesh * m) : mesh(m),kleft(NULL),kright(NULL) { load (); }
 
 		/**
 		 * Clear KD-Tree
 		 */
 		void clear () {
 			data.clear();
+			triangles.clear();
 			split = 0;
 			kleft = NULL;
 			kright = NULL;
@@ -86,24 +88,26 @@ class KDTreeNode {
 		/**
 		 * Number of random samples for the median
 		 */
-		const static unsigned int NSAMPLES = 1000;
+		const static unsigned int NSAMPLES = 200;
 
 		/**
 		 * Maximum leaf size
 		 */
-		const static unsigned int LEAFSIZE = 20;
+		const static unsigned int LEAFSIZE = 10;
 
 		/**
 		 * Setters and getters
 		 */
 		inline KDTreeNode* getLeft () const { return kleft; }
 		inline KDTreeNode* getRight () const { return kright; }
-		inline vector<unsigned int> & getData () { return data; };
+		inline vector<unsigned int> & getVertices () { return data; }
 		inline float getSplit() const { return split; }
-		inline Mesh & getMesh () { return mesh; }
+		inline const Mesh * getMesh () const { return mesh; }
+		inline const BoundingBox & getBoundingBox () const { return bbox; }
+		inline vector<unsigned int> & getTriangles () { return triangles; }
 
 		/**
 		 * Find vertices
 		 */
-		inline vector<unsigned int> find (const Vec3Df & v) { return _find (cam.toScreen (v), 0); }
+		inline const KDTreeNode & find (const Vec3Df & v) const { return _find (v, 0); }
 };
