@@ -12,16 +12,25 @@
 #include <vector>
 
 #include "Mesh.h"
+#include "KDTreeNode.hpp"
 #include "Material.h"
 #include "BoundingBox.h"
 
+using namespace std;
+
 class Object {
 public:
-    inline Object () {}
+    inline Object () { cout << "Creating object " << this << endl; }
     inline Object (const Mesh & mesh, const Material & mat) :mesh (mesh), mat (mat) {
+				cout << "Creating object " << this << endl;
         updateBoundingBox ();
+				kdt = NULL;
     }
-    virtual ~Object () {}
+
+    virtual ~Object () {
+			cout << "Destroying object " << this << endl;
+			if (kdt != NULL) { delete kdt; kdt = NULL; }
+		}
 
     inline const Mesh & getMesh () const { return mesh; }
     inline Mesh & getMesh () { return mesh; }
@@ -31,11 +40,31 @@ public:
 
     inline const BoundingBox & getBoundingBox () const { return bbox; }
     void updateBoundingBox ();
+
+		inline void computeKdTree () {
+			if (kdt == NULL) {
+				cout << "Building KD-Tree..." << endl;
+				kdt = new KDTreeNode (mesh);
+			}
+		}
+
+		inline const KDTreeNode * getKdTree () const {
+			return kdt;
+		}
+
+		inline Object & operator= (const Object & o) {
+			mesh = o.mesh;
+			mat = o.mat;
+			bbox = o.bbox;
+			if (kdt != NULL) { delete kdt; kdt = NULL; }
+			return *this;
+		}
     
 private:
     Mesh mesh;
     Material mat;
     BoundingBox bbox;
+		KDTreeNode *kdt;
 };
 
 

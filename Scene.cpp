@@ -25,7 +25,7 @@ void Scene::destroyInstance () {
 }
 
 Scene::Scene () {
-    buildDefaultScene (true);
+    buildDefaultScene (false);
     updateBoundingBox ();
 }
 
@@ -44,6 +44,7 @@ void Scene::updateBoundingBox () {
 
 // Changer ce code pour créer des scènes originales
 void Scene::buildDefaultScene (bool HD) {
+	cout << " (I) Building Default Scene..." << endl;
     Mesh groundMesh;
     if (HD)
         groundMesh.loadOFF ("models/ground_HD.off");
@@ -64,4 +65,7 @@ void Scene::buildDefaultScene (bool HD) {
     objects.push_back (ram);
     Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
     lights.push_back (l);
+
+		for (vector<Object>::iterator it = objects.begin(); it != objects.end(); it++) it->computeKdTree();
+	cout << " (I) End scene build" << endl;
 }

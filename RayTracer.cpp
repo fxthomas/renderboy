@@ -54,27 +54,24 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 
 	Ray ray (camPos, dir);
 	Vertex intersectionPoint;
-	Object intersectionObject;
+	const Object* intersectionObject = NULL;
 	unsigned int triangle;
-	bool hasIntersection = ray.intersect (*scene, intersectionPoint, intersectionObject, triangle);
+	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, triangle);
+	if (debug) {
+		cout << " (I) Kd-Tree dump :" << endl;
+		vector<unsigned int> kdt = ray.findKdTreeNode (Scene::getInstance()->getObjects()[1].getKdTree());
+		if (kdt.size() == 0) cout << "     -> The Kd-Tree is NULL..." << endl;
+		else for (vector<unsigned int>::const_iterator it = kdt.begin(); it != kdt.end(); it++) cout << "     -> Triangle: " << *it << endl;
+	}
 	if (hasIntersection) {
 		if (debug) {
-			cout << " (I) Computing KD-Tree..." << endl;
-			KDTreeNode kt (&intersectionObject.getMesh());
-			KDTreeNode ktf = kt.find (intersectionPoint.getPos());
-			cout << " (I) KDTree Bounds : [Min: " << ktf.getBoundingBox().getMin() << ", Max: " << ktf.getBoundingBox().getMax() << "]" << endl;
-			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(0)].getPos() << endl;
-			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(1)].getPos() << endl;
-			cout << "Point: " << intersectionObject.getMesh().getVertices()[intersectionObject.getMesh().getTriangles()[triangle].getVertex(2)].getPos() << endl;
-			for (vector<unsigned int>::iterator it = ktf.getVertices().begin(); it != ktf.getVertices().end(); it++) cout << intersectionObject.getMesh().getVertices()[*it].getPos() << endl;
-			for (vector<unsigned int>::iterator it = ktf.getTriangles().begin(); it != ktf.getTriangles().end(); it++) cout << "Triangle " << *it << endl;
 			cout << " (I) Intersection with " << intersectionPoint.getPos() << endl;
-			cout << " (I) Object number of triangles: " << intersectionObject.getMesh().getTriangles().size() << endl;
+			cout << " (I) Object number of triangles: " << intersectionObject->getMesh().getTriangles().size() << endl;
 			cout << " (I) Intersection with triangle: " << triangle << endl;
-			cout << " (I) Material: " << intersectionObject.getMaterial() << endl << endl;
+			cout << " (I) Material: " << intersectionObject->getMaterial() << endl << endl;
 		}
 
-		Vec3Df c = intersectionObject.getMaterial().getColor();
+		Vec3Df c = intersectionObject->getMaterial().getColor();
 		Vec3Df diffuse;
 		Vec3Df specular;
 
@@ -94,7 +91,7 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 			// Specular Light
 			sc = Vec3D<float>::dotProduct(intersectionPoint.getNormal()*sc*2.f-lm, vv);
 			if (sc > 0.) {
-				sc = pow (sc, intersectionObject.getMaterial().getShininess() * 12.8f);
+				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 12.8f);
 				specular = light->getColor() * sc;
 			}
 
@@ -110,9 +107,9 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 		}
 
 		// Total color blend
-		c[0] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[0]*diffuse[0] + intersectionObject.getMaterial().getSpecular()*specular[0]);
-		c[1] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[1]*diffuse[1] + intersectionObject.getMaterial().getSpecular()*specular[1]);
-		c[2] = (intersectionObject.getMaterial().getDiffuse()*intersectionObject.getMaterial().getColor()[2]*diffuse[2] + intersectionObject.getMaterial().getSpecular()*specular[2]);
+		c[0] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
+		c[1] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
+		c[2] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
 		// Debug total color
 		if (debug) {
@@ -132,14 +129,15 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
  * Renders the given scene with the given camera parameters into a QImage, and returns it.
  */
 QImage RayTracer::render (const Camera & cam) {
+	for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getKdTree()->show();
 	// Create an image to hold the final raytraced render
 	QImage image (QSize (cam.screenWidth(), cam.screenHeight()), QImage::Format_RGB888);
-	
+
 	// For each camera pixel, cast a ray and compute its reflecting color
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
 		cout << "Done: " << float(i)/float(cam.screenWidth())*100. << "%" << endl;
 
-#pragma omp parallel for schedule(static) default(shared)
+//pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			Vec3Df c = raytraceSingle (cam, i, j, false);
 			image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));

@@ -33,7 +33,7 @@ class KDTreeNode {
 		/**
 		 * Generate sub-KD-Tree data
 		 */
-		void loadVertices (vector<unsigned int> & verts, unsigned int axis);
+		bool loadVertices (vector<unsigned int> & verts, unsigned int axis);
 
 		float split;
 		const Mesh *mesh;
@@ -57,12 +57,13 @@ class KDTreeNode {
 		 * @see load
 		 * @author François-Xavier Thomas
 		 */
-		KDTreeNode() : split(0),kleft(NULL),kright(NULL) { }
+		KDTreeNode() : split(0),kleft(NULL),kright(NULL) { /*cout << "Creating KD-Tree " << this << endl;*/ }
 
 		/**
 		 * Class destructor
 		 */
 		~KDTreeNode () {
+			cout << "Destroying KD-Tree " << this << endl;
 			if (kleft != NULL) { delete kleft; kleft = NULL; }
 			if (kright != NULL) { delete kright; kright = NULL; }
 		}
@@ -72,7 +73,7 @@ class KDTreeNode {
 		 * 
 		 * @author François-Xavier Thomas
 		 */
-		KDTreeNode(const Mesh * m) : mesh(m),kleft(NULL),kright(NULL) { load (); }
+		KDTreeNode(const Mesh & m) : mesh(&m),kleft(NULL),kright(NULL) { cout << "Creating KD-Tree " << this << endl; load (); }
 
 		/**
 		 * Clear KD-Tree
@@ -81,8 +82,8 @@ class KDTreeNode {
 			data.clear();
 			triangles.clear();
 			split = 0;
-			kleft = NULL;
-			kright = NULL;
+			if (kleft != NULL) { delete kleft; kleft = NULL; }
+			if (kright != NULL) { delete kright; kright = NULL; }
 		}
 
 		/**
@@ -93,18 +94,34 @@ class KDTreeNode {
 		/**
 		 * Maximum leaf size
 		 */
-		const static unsigned int LEAFSIZE = 10;
+		const static unsigned int LEAFSIZE = 5;
 
 		/**
 		 * Setters and getters
 		 */
-		inline KDTreeNode* getLeft () const { return kleft; }
-		inline KDTreeNode* getRight () const { return kright; }
-		inline vector<unsigned int> & getVertices () { return data; }
+		inline const KDTreeNode* getLeft () const { return kleft; }
+		inline const KDTreeNode* getRight () const { return kright; }
+		inline const vector<unsigned int> & getVertices () const { return data; }
 		inline float getSplit() const { return split; }
 		inline const Mesh * getMesh () const { return mesh; }
 		inline const BoundingBox & getBoundingBox () const { return bbox; }
-		inline vector<unsigned int> & getTriangles () { return triangles; }
+		inline const vector<unsigned int> & getTriangles () const { return triangles; }
+
+		inline KDTreeNode & operator= (const KDTreeNode & kd) {
+			clear();
+			mesh = kd.mesh;
+			bbox = bbox;
+			return *this;
+		}
+
+		void show () const {
+			if (kleft == NULL && kright == NULL) {
+				for (vector<unsigned int>::const_iterator it = triangles.begin(); it != triangles.end(); it++) cout << "Tri: " << *it << endl;
+			}
+			cout << "-- " << this << endl << "left: " << kleft << ", right: " << kright << endl;
+			if (kleft != NULL) kleft->show();
+			if (kright != NULL) kright->show();
+		}
 
 		/**
 		 * Find vertices

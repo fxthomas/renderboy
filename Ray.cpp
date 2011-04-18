@@ -63,6 +63,33 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
 }
 
 /**
+ * Finds the intersecting leaf, inside the KD-Tree
+ */
+vector<unsigned int> Ray::findKdTreeNode (const KDTreeNode* kdtree) const {
+	if (kdtree == NULL) return vector<unsigned int>();
+	else if (kdtree->getLeft() == NULL && kdtree->getRight() == NULL) {
+		Vec3Df v;
+		if (intersect (kdtree->getBoundingBox(), v)) return kdtree->getTriangles();
+		else return vector<unsigned int>();
+	}
+	else {
+		Vec3Df vleft, vright;
+		bool ileft = intersect (kdtree->getLeft()->getBoundingBox(), vleft);
+		bool iright = intersect (kdtree->getRight()->getBoundingBox(), vright);
+
+		if (!ileft && iright) return findKdTreeNode (kdtree->getRight());
+		else if (!iright && ileft) return findKdTreeNode (kdtree->getLeft());
+		else if (iright && ileft) {
+			vector<unsigned int> ktl = findKdTreeNode (kdtree->getLeft());
+			vector<unsigned int> ktr = findKdTreeNode (kdtree->getRight());
+			for (vector<unsigned int>::iterator it = ktr.begin(); it != ktr.end(); it++) ktl.push_back (*it);
+			return ktl;
+		}
+		else return vector<unsigned int>();
+	}
+}
+
+/**
  * Computes the intersection of a light ray and a triangle, defined by 3 vertices
  * @param v0,v1,v2          
  * @param ir                Distance between intersection point and origin
@@ -108,20 +135,29 @@ bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & inter
  * Tests intersection with an object
  */
 bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
+	// Initialize stuff
 	ir = INFINITY;
 	bool hasIntersection = false;
 
 	float tmpIr = 0.;
 	bool tmpIntersection = false;
 	Vertex tmpPoint;
-	for (unsigned int i = 0; i < object.getMesh().getTriangles().size(); i++) {
-		Triangle tri = object.getMesh().getTriangles()[i];
+
+	// Find KD-Tree node
+	vector<unsigned int> ktf = findKdTreeNode (object.getKdTree());
+
+	// If not found return false
+	if (ktf.size() == 0) return false;
+	
+	// Look for intersecting triangle
+	for (vector<unsigned int>::const_iterator it = ktf.begin(); it != ktf.end(); it++) {
+		Triangle tri = object.getMesh().getTriangles()[*it];
 		tmpIntersection = intersect (object, tri, tmpPoint, tmpIr);
 		if (tmpIntersection) {
 			hasIntersection = true;
 			if (tmpIr < ir) {
 				ir = tmpIr;
-				triangle = i;
+				triangle = *it;
 				intersectionPoint = tmpPoint;
 			}
 		}
@@ -132,7 +168,7 @@ bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & 
 /**
  * Tests intersection with the scene
  */
-bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, Object & intersectionObject, unsigned int & triangle) const {
+bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, unsigned int & triangle) const {
 	float ir = INFINITY;
 	bool hasIntersection = false;
 
@@ -146,7 +182,7 @@ bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, Object & i
 			hasIntersection = true;
 			if (tmpIr < ir) {
 				triangle = tritri;
-				intersectionObject = *obj;
+				*intersectionObject = &(*obj);
 				ir = tmpIr;
 				intersectionPoint = tmpPoint;
 			} //else cout << tmpIr << endl;
