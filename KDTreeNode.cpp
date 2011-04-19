@@ -63,17 +63,9 @@ bool KDTreeNode::loadVertices (vector<unsigned int> & verts, unsigned int axis) 
 		// Sort each vertex into a split voxel
 		vector<unsigned int> lverts;
 		vector<unsigned int> rverts;
-		vector<unsigned int> belongs (mesh->getVertices().size(), false);
 		for (vector<unsigned int>::iterator v = verts.begin(); v != verts.end(); v++) {
-			belongs[*v] = true;
 			if (mesh->getVertices()[*v].getPos()[axis] < split) lverts.push_back (*v);
 			else rverts.push_back (*v);
-		}
-
-		// Initialize triangles
-		for (unsigned int it = 0; it < mesh->getTriangles().size(); it++) {
-			Triangle t = mesh->getTriangles()[it];
-			if (belongs[t.getVertex(0)] || belongs[t.getVertex(1)] || belongs[t.getVertex(2)]) triangles.push_back (it);
 		}
 
 		// Create left node

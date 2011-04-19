@@ -32,7 +32,7 @@ public:
     inline const Vec3Df & getDirection () const { return direction; }
     inline Vec3Df & getDirection () { return direction; }
 
-		vector<unsigned int> findKdTreeNode (const KDTreeNode* kdtree) const;
+		const KDTreeNode* intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const;
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
 		bool intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const;

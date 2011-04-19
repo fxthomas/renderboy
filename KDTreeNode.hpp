@@ -89,7 +89,7 @@ class KDTreeNode {
 		/**
 		 * Number of random samples for the median
 		 */
-		const static unsigned int NSAMPLES = 200;
+		const static unsigned int NSAMPLES = 50;
 
 		/**
 		 * Maximum leaf size

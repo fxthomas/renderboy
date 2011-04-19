@@ -59,34 +59,73 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
         } else {
             intersectionPoint[i] = candidatePlane[i];
         }
-    return (true);			
+    return (true);
 }
 
 /**
  * Finds the intersecting leaf, inside the KD-Tree
  */
-vector<unsigned int> Ray::findKdTreeNode (const KDTreeNode* kdtree) const {
-	if (kdtree == NULL) return vector<unsigned int>();
+const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
+	if (kdtree == NULL) return NULL;
 	else if (kdtree->getLeft() == NULL && kdtree->getRight() == NULL) {
-		Vec3Df v;
-		if (intersect (kdtree->getBoundingBox(), v)) return kdtree->getTriangles();
-		else return vector<unsigned int>();
-	}
+		// Initialize stuff
+		ir = INFINITY;
+		bool hasIntersection = false;
+
+		float tmpIr = 0.;
+		bool tmpIntersection = false;
+		Vertex tmpPoint;
+
+		for (vector<unsigned int>::const_iterator ti = kdtree->getTriangles().begin(); ti != kdtree->getTriangles().end(); ti++) {
+			Triangle tri = kdtree->getMesh()->getTriangles()[*ti];
+			Vertex v0 = kdtree->getMesh()->getVertices()[tri.getVertex(0)];
+			Vertex v1 = kdtree->getMesh()->getVertices()[tri.getVertex(1)];
+			Vertex v2 = kdtree->getMesh()->getVertices()[tri.getVertex(2)];
+			tmpIntersection = intersect (v0, v1, v2, tmpPoint, tmpIr);
+			if (tmpIntersection) {
+				hasIntersection = true;
+				if (tmpIr < ir) {
+					ir = tmpIr;
+					triangle = *ti;
+					intersectionPoint = tmpPoint;
+				}
+			}
+		}
+
+		if (hasIntersection) return kdtree;
+		else return NULL;
+	} else if (kdtree->getLeft() == NULL) return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
+	else if (kdtree->getRight() == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
 	else {
 		Vec3Df vleft, vright;
 		bool ileft = intersect (kdtree->getLeft()->getBoundingBox(), vleft);
 		bool iright = intersect (kdtree->getRight()->getBoundingBox(), vright);
 
-		if (!ileft && iright) return findKdTreeNode (kdtree->getRight());
-		else if (!iright && ileft) return findKdTreeNode (kdtree->getLeft());
+		if (!ileft && iright) return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
+		else if (!iright && ileft) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
 		else if (iright && ileft) {
-			vector<unsigned int> ktl = findKdTreeNode (kdtree->getLeft());
-			vector<unsigned int> ktr = findKdTreeNode (kdtree->getRight());
-			for (vector<unsigned int>::iterator it = ktr.begin(); it != ktr.end(); it++) ktl.push_back (*it);
-			return ktl;
+			float irr, irl;
+			Vertex vr, vl;
+			unsigned int trl, trr;
+			const KDTreeNode *ktl, *ktr;
+
+			irl = (vleft-origin).getSquaredLength();
+			irr = (vright-origin).getSquaredLength();
+
+			if (irl < irr) {
+				ktl = intersect (kdtree->getLeft(), vl, irl, trl);
+				if (ktl == NULL) return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
+				else { intersectionPoint = vl; ir = irl; triangle = trl; return ktl; }
+			}
+			else {
+				ktr = intersect (kdtree->getRight(), vr, irr, trr);
+				if (ktr == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
+				else { intersectionPoint = vr; ir = irr; triangle = trr; return ktr; }
+			}
 		}
-		else return vector<unsigned int>();
+		else return NULL;
 	}
+	return NULL;
 }
 
 /**
@@ -135,34 +174,11 @@ bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & inter
  * Tests intersection with an object
  */
 bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
-	// Initialize stuff
-	ir = INFINITY;
-	bool hasIntersection = false;
-
-	float tmpIr = 0.;
-	bool tmpIntersection = false;
-	Vertex tmpPoint;
-
 	// Find KD-Tree node
-	vector<unsigned int> ktf = findKdTreeNode (object.getKdTree());
+	const KDTreeNode* ktf = intersect (object.getKdTree(), intersectionPoint, ir, triangle);
 
 	// If not found return false
-	if (ktf.size() == 0) return false;
-	
-	// Look for intersecting triangle
-	for (vector<unsigned int>::const_iterator it = ktf.begin(); it != ktf.end(); it++) {
-		Triangle tri = object.getMesh().getTriangles()[*it];
-		tmpIntersection = intersect (object, tri, tmpPoint, tmpIr);
-		if (tmpIntersection) {
-			hasIntersection = true;
-			if (tmpIr < ir) {
-				ir = tmpIr;
-				triangle = *it;
-				intersectionPoint = tmpPoint;
-			}
-		}
-	}
-	return hasIntersection;
+	return (ktf != NULL);
 }
 
 /**

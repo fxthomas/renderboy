@@ -59,9 +59,11 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, triangle);
 	if (debug) {
 		cout << " (I) Kd-Tree dump :" << endl;
-		vector<unsigned int> kdt = ray.findKdTreeNode (Scene::getInstance()->getObjects()[1].getKdTree());
-		if (kdt.size() == 0) cout << "     -> The Kd-Tree is NULL..." << endl;
-		else for (vector<unsigned int>::const_iterator it = kdt.begin(); it != kdt.end(); it++) cout << "     -> Triangle: " << *it << endl;
+		float f; 
+		Vertex vd;
+		const KDTreeNode* kdt = ray.intersect (Scene::getInstance()->getObjects()[1].getKdTree(), vd, f, triangle);
+		if (kdt == NULL) cout << "     -> The Kd-Tree is NULL..." << endl;
+		else for (vector<unsigned int>::const_iterator it = kdt->getTriangles().begin(); it != kdt->getTriangles().end(); it++) cout << "     -> Triangle: " << *it << endl;
 	}
 	if (hasIntersection) {
 		if (debug) {
@@ -139,7 +141,14 @@ QImage RayTracer::render (const Camera & cam) {
 
 //pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
+			// Raytrace
 			Vec3Df c = raytraceSingle (cam, i, j, false);
+			
+			// Depth map
+			//float f = (c - cam.position()).getSquaredLength();
+			//image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (f, 0, 255), clamp (f, 0, 255), clamp (f, 0, 255)));
+			
+			// Computed lighting
 			image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
 		}
 
