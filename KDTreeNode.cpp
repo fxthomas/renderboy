@@ -131,9 +131,13 @@ bool KDTreeNode::loadVertices (vector<unsigned int> & verts, vector<unsigned int
 	} else {
 		// Compute split plane
 		split = 0.;
-		for (unsigned int i = 0; i < NSAMPLES && i < verts.size(); i++) split += mesh->getVertices()[verts[rand()%verts.size()]].getPos()[axis];
-		if (NSAMPLES < verts.size()) split /= (float)NSAMPLES;
-		else split /= float(verts.size());
+		if (NSAMPLES > verts.size()) {
+			for (unsigned int i = 0; i < verts.size(); i++) split += mesh->getVertices()[verts[i]].getPos()[axis];
+			split /= (float)verts.size();
+		}	else {
+			for (unsigned int i = 0; i < NSAMPLES; i++) split += mesh->getVertices()[verts[rand()%verts.size()]].getPos()[axis];
+			split /= (float)NSAMPLES;
+		}
 
 		// Compute new bounding boxes
 		Vec3Df l_vmi = bbox.getMin();
@@ -184,7 +188,7 @@ bool KDTreeNode::loadVertices (vector<unsigned int> & verts, vector<unsigned int
 			//else cout << "No tri right (" << sl << "," << sr << ")" << endl;
 		}
 
-		if (lverts.size() > 0 && rverts.size() > 0) {
+		if (lverts.size() > 0 && rverts.size() > 0 && lverts.size()+rverts.size() > LEAFSIZE) {
 			// Create left node
 			kleft = new KDTreeNode ();
 			kleft->mesh = mesh;
