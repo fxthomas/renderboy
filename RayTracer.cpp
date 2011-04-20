@@ -90,8 +90,6 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
 		Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
 		Vec3Df normal = (1-iu-iv)*p0 + iv*p1 + iu*p2;
-		cout<<"iu= " <<iu<<endl;
-		cout<<"iv= " <<iv<<endl;
 		normal.normalize();
 		Vec3Df vv = camPos - intersectionPoint.getPos();
 		vv.normalize();
@@ -110,7 +108,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 			// Specular Light
 			sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
 			if (sc > 0.) {
-				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 12.8f);
+				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 40.f);
 				specular = light->getColor() * sc;
 			}
 
