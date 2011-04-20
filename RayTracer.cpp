@@ -89,7 +89,9 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 		Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
 		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
 		Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
-		Vec3Df normal = (1-iu-iv)*p0 + iu*p1 + iv*p2;
+		Vec3Df normal = (1-iu-iv)*p0 + iv*p1 + iu*p2;
+		cout<<"iu= " <<iu<<endl;
+		cout<<"iv= " <<iv<<endl;
 		normal.normalize();
 		Vec3Df vv = camPos - intersectionPoint.getPos();
 		vv.normalize();
