@@ -31,6 +31,7 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTime>
 
 #include "RayTracer.h"
 
@@ -75,10 +76,14 @@ Window::~Window () {
 }
 
 void Window::renderRayImage () {
+		QTime timer;
+		timer.start();
+		cout << " ----- Raytracing: Start! ----- " << endl;
     Camera cam = viewer->getCamera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
     rayImage = rayTracer->render (cam);
     imageLabel->setPixmap (QPixmap::fromImage (rayImage));
+		cout << " ----- Raytracing: Elapsed: " << timer.elapsed() << "ms ----- " << endl;
     
 }
 
@@ -117,7 +122,8 @@ void Window::displayPointInfo (QMouseEvent* me) {
 	Camera cam = viewer->getCamera ();
 	RayTracer * rayTracer = RayTracer::getInstance ();
 	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
-	rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1);
+	Scene::getInstance()->setSelectedBoundingBox(rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1));
+	viewer->updateGL ();
 }
 
 void Window::initControlWidget () {

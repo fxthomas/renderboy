@@ -22,6 +22,7 @@
 
 using namespace std;
 
+
 /**
  * KDTreeNode Class
  * This class does something you ought to say here!
@@ -33,7 +34,7 @@ class KDTreeNode {
 		/**
 		 * Generate sub-KD-Tree data
 		 */
-		bool loadVertices (vector<unsigned int> & verts, unsigned int axis);
+		bool loadVertices (vector<unsigned int> & verts, vector<unsigned int> & tri, unsigned int axis);
 
 		float split;
 		const Mesh *mesh;
@@ -44,6 +45,8 @@ class KDTreeNode {
 		BoundingBox bbox;
 
 		const KDTreeNode & _find (const Vec3Df & v, unsigned int axis) const;
+		bool _lineInBox (const Vec3Df & origin, const Vec3Df & direction, const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
+		bool _triangleInBox (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, const BoundingBox & bbox) const;
 
 	public:
 		/**
@@ -89,12 +92,18 @@ class KDTreeNode {
 		/**
 		 * Number of random samples for the median
 		 */
-		const static unsigned int NSAMPLES = 50;
+		const static unsigned int NSAMPLES = 100;
 
 		/**
 		 * Maximum leaf size
 		 */
-		const static unsigned int LEAFSIZE = 5;
+		const static unsigned int LEAFSIZE = 1;
+
+		/**
+		 * Tree fuzziness
+		 */
+		//const static float FUZZINESS=0.12f;
+		const static float FUZZINESS=0.05f;
 
 		/**
 		 * Setters and getters

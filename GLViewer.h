@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Scene.h"
+#include "BoundingBox.h"
 #include "Camera.hpp"
 
 class GLViewer : public QGLViewer  {

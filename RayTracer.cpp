@@ -32,7 +32,7 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned int j, bool debug) {
+Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned int j, bool debug, BoundingBox & bb) {
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -63,7 +63,11 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 		Vertex vd;
 		const KDTreeNode* kdt = ray.intersect (Scene::getInstance()->getObjects()[1].getKdTree(), vd, f, triangle);
 		if (kdt == NULL) cout << "     -> The Kd-Tree is NULL..." << endl;
-		else for (vector<unsigned int>::const_iterator it = kdt->getTriangles().begin(); it != kdt->getTriangles().end(); it++) cout << "     -> Triangle: " << *it << endl;
+		else {
+			bb = kdt->getBoundingBox();
+			cout << "     -> Point distance: " << f << endl;
+			for (vector<unsigned int>::const_iterator it = kdt->getTriangles().begin(); it != kdt->getTriangles().end(); it++) cout << "     -> Triangle: " << *it << endl;
+		}
 	}
 	if (hasIntersection) {
 		if (debug) {
@@ -131,18 +135,19 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
  * Renders the given scene with the given camera parameters into a QImage, and returns it.
  */
 QImage RayTracer::render (const Camera & cam) {
-	for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getKdTree()->show();
+	//for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getKdTree()->show();
 	// Create an image to hold the final raytraced render
 	QImage image (QSize (cam.screenWidth(), cam.screenHeight()), QImage::Format_RGB888);
 
 	// For each camera pixel, cast a ray and compute its reflecting color
+	BoundingBox b;
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
 		cout << "Done: " << float(i)/float(cam.screenWidth())*100. << "%" << endl;
 
 //pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			// Raytrace
-			Vec3Df c = raytraceSingle (cam, i, j, false);
+			Vec3Df c = raytraceSingle (cam, i, j, false, b);
 			
 			// Depth map
 			//float f = (c - cam.position()).getSquaredLength();
@@ -158,6 +163,8 @@ QImage RayTracer::render (const Camera & cam) {
 	return image;
 }
 
-void RayTracer::debug (const Camera & cam, unsigned int i, unsigned int j) {
-	raytraceSingle (cam, i, j, true);
+BoundingBox RayTracer::debug (const Camera & cam, unsigned int i, unsigned int j) {
+	BoundingBox bb;
+	raytraceSingle (cam, i, j, true, bb);
+	return bb;
 }
