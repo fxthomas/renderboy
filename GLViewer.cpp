@@ -133,7 +133,19 @@ void GLViewer::draw () {
         glDisable (GL_COLOR_MATERIAL);
         o.getMesh ().renderGL (renderingMode == Flat);
     }
+
+		glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+		static GLfloat glMatBox[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+		glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, glMatBox);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glMatBox);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, glMatBox);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 128);
+        glDisable (GL_COLOR_MATERIAL);
+		BoundingBox bbox = scene->getSelectedBoundingBox();
+		bbox.render();
+
+    if (wireframe) 
+        glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+    else
+        glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 }
-
-
-

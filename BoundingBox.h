@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 #include <algorithm>
+#include <GL/gl.h>
+#include <GL/glut.h>
 
 #include "Vec3D.h"
 
@@ -43,6 +45,8 @@ const float BOUNDINGBOX_EPSILON = 0.0001f;
 
 class BoundingBox {
 public:
+		static const float BBOX_FUZZINESS = 0.0f;
+
     BoundingBox () : minBb (Vec3Df (0.0f, 0.0f, 0.0f)), maxBb (Vec3Df (0.0f, 0.0f, 0.0f)) {}
     BoundingBox (const Vec3Df & p) : minBb (p), maxBb (p) {}
     BoundingBox (const Vec3Df & min, const Vec3Df & max) : minBb (min), maxBb (max) {}
@@ -81,6 +85,12 @@ public:
     inline bool contains (const Vec3Df & p) const {
         for (unsigned int i = 0; i < 3; i++)
             if (!(p[i] >= minBb[i] && p[i] <= maxBb[i]))
+                return false;
+        return true;
+    }
+    inline bool containsFuzzy (const Vec3Df & p) const {
+        for (unsigned int i = 0; i < 3; i++)
+            if (!(p[i] >= minBb[i]-(maxBb[i]-minBb[i])*BBOX_FUZZINESS && p[i] <= maxBb[i]+(maxBb[i]-minBb[i])*BBOX_FUZZINESS))
                 return false;
         return true;
     }
@@ -135,6 +145,64 @@ public:
     }
     bool intersectRay (const Vec3Df & origin, const Vec3Df & direction, Vec3Df & intersection) const;
 
+		inline void render () {
+			float a = maxBb[0] - minBb[0];
+			float b = maxBb[1] - minBb[1];
+			float c = maxBb[2] - minBb[2];
+			glPushMatrix();
+				glTranslatef (minBb[0], minBb[1], minBb[2]);
+				glBegin(GL_TRIANGLES);
+					glVertex3f (0.f, 0.f, 0.f);
+					glVertex3f (a, 0.f, 0.f);
+					glVertex3f (a, 0.f, c);
+
+					glVertex3f (a, 0.f, c);
+					glVertex3f (0.f, 0.f, c);
+					glVertex3f (0.f, 0.f, 0.f);
+
+					glVertex3f (a, 0.f, 0.f);
+					glVertex3f (a, b, 0.f);
+					glVertex3f (a, b, c);
+					
+					glVertex3f (a, b, c);
+					glVertex3f (a, 0.f, c);
+					glVertex3f (a, 0.f, 0.f);
+
+					glVertex3f (0.f, 0.f, c);
+					glVertex3f (a, 0.f, c);
+					glVertex3f (a, b, c);
+
+					glVertex3f (a, b, c);
+					glVertex3f (0.f, b, c);
+					glVertex3f (0.f, 0.f, c);
+
+					glVertex3f (a, 0.f, 0.f);
+					glVertex3f (0.f, 0.f, 0.f);
+					glVertex3f (a, b, 0.f);
+
+					glVertex3f (a, b, 0.f);
+					glVertex3f (0.f, 0.f, 0.f);
+					glVertex3f (0.f, b, 0.f);
+
+					glVertex3f (0.f, 0.f, 0.f);
+					glVertex3f (0.f, b, c);
+					glVertex3f (0.f, b, 0.f);
+
+					glVertex3f (0.f, 0.f, c);
+					glVertex3f (0.f, b, c);
+					glVertex3f (0.f, 0.f, 0.f);
+
+					glVertex3f (0.f, b, 0.f);
+					glVertex3f (a, b, c);
+					glVertex3f (a, b, 0.f);
+
+					glVertex3f (0.f, b, 0.f);
+					glVertex3f (0.f, b, c);
+					glVertex3f (a, b, c);
+				glEnd();
+			glPopMatrix();
+		}
+
 private:
     inline float getWHL (unsigned int i) const {
         return (maxBb[i] - minBb[i]);
@@ -145,6 +213,7 @@ private:
     static inline bool isIn (float x, float min, float max) {
         return (x >= min && x <= max);
     }
+
 
     Vec3Df minBb, maxBb;
 };

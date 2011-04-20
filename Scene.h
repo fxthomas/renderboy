@@ -28,6 +28,9 @@ public:
     
     inline const BoundingBox & getBoundingBox () const { return bbox; }
     void updateBoundingBox ();
+
+		inline const BoundingBox & getSelectedBoundingBox() const { return selbb; }
+		inline void setSelectedBoundingBox(const BoundingBox & bb) { selbb = bb; };
     
 protected:
     Scene ();
@@ -38,6 +41,7 @@ private:
     std::vector<Object> objects;
     std::vector<Light> lights;
     BoundingBox bbox;
+		BoundingBox selbb;
 };
 
 

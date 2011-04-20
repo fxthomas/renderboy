@@ -117,7 +117,8 @@ void Window::displayPointInfo (QMouseEvent* me) {
 	Camera cam = viewer->getCamera ();
 	RayTracer * rayTracer = RayTracer::getInstance ();
 	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
-	rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1);
+	Scene::getInstance()->setSelectedBoundingBox(rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1));
+	viewer->updateGL ();
 }
 
 void Window::initControlWidget () {

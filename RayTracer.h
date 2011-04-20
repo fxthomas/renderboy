@@ -26,9 +26,9 @@ public:
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
-    Vec3Df raytraceSingle (const Camera & cam, unsigned int i, unsigned int j, bool debug);
+    Vec3Df raytraceSingle (const Camera & cam, unsigned int i, unsigned int j, bool debug, BoundingBox & bb);
     QImage render (const Camera & cam);
-    void debug (const Camera & cam, unsigned int i, unsigned int j);
+    BoundingBox debug (const Camera & cam, unsigned int i, unsigned int j);
     
 protected:
     inline RayTracer () {}
