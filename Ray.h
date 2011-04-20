@@ -32,14 +32,14 @@ public:
     inline const Vec3Df & getDirection () const { return direction; }
     inline Vec3Df & getDirection () { return direction; }
 
-		const KDTreeNode* intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const;
+		const KDTreeNode* intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, float & iu, float & iv, unsigned int & triangle) const;
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
 		bool intersectFuzzy (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
-		bool intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const;
-		bool intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir) const;
-		bool intersect (const Object & object, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const;
-		bool intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, unsigned int & triangle) const;
+		bool intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir, float & iu, float & iv) const;
+		bool intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir, float & iu, float & iv) const;
+		bool intersect (const Object & object, Vertex & intersectionPoint, float & ir, float & iu, float & iv, unsigned int & triangle) const;
+		bool intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, float & iu, float & iv, unsigned int & triangle) const;
     
 private:
     Vec3Df origin;

@@ -59,12 +59,13 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 	Vertex intersectionPoint;
 	const Object* intersectionObject = NULL;
 	unsigned int triangle;
-	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, triangle);
+	float iu, iv;
+	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, iu, iv, triangle);
 	if (debug) {
 		cout << "     [ kD-Tree ]" << endl;
-		float f; 
+		float f,fu,fv;
 		Vertex vd;
-		const KDTreeNode* kdt = ray.intersect (Scene::getInstance()->getObjects()[1].getKdTree(), vd, f, triangle);
+		const KDTreeNode* kdt = ray.intersect (Scene::getInstance()->getObjects()[1].getKdTree(), vd, f, fu, fv, triangle);
 		if (kdt != NULL) {
 			bb = kdt->getBoundingBox();
 			cout << "       Point distance: " << f << endl;
@@ -85,21 +86,27 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 		Vec3Df diffuse;
 		Vec3Df specular;
 
+		Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
+		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
+		Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
+		Vec3Df normal = (1-iu-iv)*p0 + iu*p1 + iv*p2;
+		normal.normalize();
+		Vec3Df vv = camPos - intersectionPoint.getPos();
+		vv.normalize();
+
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
 			Vec3Df lpos = cam.toWorld (light->getPos());
 			Vec3Df lm = lpos - intersectionPoint.getPos();
 			lm.normalize();
-			Vec3Df vv = camPos - intersectionPoint.getPos();
-			vv.normalize();
 
 			// Diffuse Light
-			float sc = Vec3D<float>::dotProduct(lm, intersectionPoint.getNormal());
+			float sc = Vec3D<float>::dotProduct(lm, normal);
 			if (sc > 0.) {
 				diffuse = light->getColor() * sc;
 			}
 
 			// Specular Light
-			sc = Vec3D<float>::dotProduct(intersectionPoint.getNormal()*sc*2.f-lm, vv);
+			sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
 			if (sc > 0.) {
 				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 12.8f);
 				specular = light->getColor() * sc;
@@ -108,18 +115,17 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 			// Raytracing debug
 			if (debug) {
 				cout << "     [ Light ]" << endl;
-				cout << "       Normal: " << intersectionPoint.getNormal() << endl;
+				cout << "       Normal: " << normal << endl;
 				cout << "       Diffuse Factor: " << sc << endl;
 				cout << "       Diffuse Color: " << diffuse << endl;
 				cout << "       Specular Factor: " << sc << endl;
 				cout << "       Specular Color: " << specular << endl << endl;
 			}
 		}
-
 		// Total color blend
-		c[0] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
-		c[1] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
-		c[2] = (intersectionObject->getMaterial().getDiffuse()*intersectionObject->getMaterial().getColor()[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
+		c[0] = (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
+		c[1] = (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
+		c[2] = (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
 		// Debug total color
 		if (debug) {

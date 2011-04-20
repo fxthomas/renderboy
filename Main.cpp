@@ -22,7 +22,7 @@ int main (int argc, char **argv)
 	cout << " (I) See: http://bitbucket.org/fxthomas/renderboy" << endl;
 	cout << endl;
 
-	cout << " (L) Loading..." << endl << endl;
+	cout << " --- Loading..." << endl << endl;
   QApplication raymini (argc, argv);
   setBoubekQTStyle (raymini);
   QApplication::setStyle (new QPlastiqueStyle);
@@ -32,7 +32,7 @@ int main (int argc, char **argv)
   window->show();
   raymini.connect (&raymini, SIGNAL (lastWindowClosed()), &raymini, SLOT (quit()));
   
-	cout << endl << " (L) Starting Main GUI" << endl << endl;
+	cout << endl << " --- Starting Main GUI" << endl << endl;
   return raymini.exec ();
 }
 

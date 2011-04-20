@@ -71,14 +71,14 @@ bool Ray::intersectFuzzy (const BoundingBox & bbox, Vec3Df & intersectionPoint) 
 /**
  * Finds the intersecting leaf, inside the KD-Tree
  */
-const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
+const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectionPoint, float & ir, float & iu, float & iv, unsigned int & triangle) const {
 	if (kdtree == NULL) return NULL;
 	else if (kdtree->getLeft() == NULL && kdtree->getRight() == NULL) {
 		// Initialize stuff
 		ir = INFINITY;
 		bool hasIntersection = false;
 
-		float tmpIr = 0.;
+		float tmpIr = 0., tmpIu, tmpIv;
 		bool tmpIntersection = false;
 		Vertex tmpPoint;
 
@@ -87,11 +87,13 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 			Vertex v0 = kdtree->getMesh()->getVertices()[tri.getVertex(0)];
 			Vertex v1 = kdtree->getMesh()->getVertices()[tri.getVertex(1)];
 			Vertex v2 = kdtree->getMesh()->getVertices()[tri.getVertex(2)];
-			tmpIntersection = intersect (v0, v1, v2, tmpPoint, tmpIr);
+			tmpIntersection = intersect (v0, v1, v2, tmpPoint, tmpIr, tmpIu, tmpIv);
 			if (tmpIntersection) {
 				hasIntersection = true;
 				if (tmpIr < ir) {
 					ir = tmpIr;
+					iu = tmpIu;
+					iv = tmpIv;
 					triangle = *ti;
 					intersectionPoint = tmpPoint;
 				}
@@ -103,17 +105,17 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 		}
 		else return NULL;
 
-	} else if (kdtree->getLeft() == NULL) return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
-	else if (kdtree->getRight() == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
+	} else if (kdtree->getLeft() == NULL) return intersect (kdtree->getRight(), intersectionPoint, ir, iu, iv, triangle);
+	else if (kdtree->getRight() == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
 	else {
 		Vec3Df vleft, vright;
 		bool ileft = intersectFuzzy(kdtree->getLeft()->getBoundingBox(), vleft);
 		bool iright = intersectFuzzy(kdtree->getRight()->getBoundingBox(), vright);
 
-		if (!ileft && iright) return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
-		else if (!iright && ileft) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
+		if (!ileft && iright) return intersect (kdtree->getRight(), intersectionPoint, ir, iu, iv, triangle);
+		else if (!iright && ileft) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
 		else if (iright && ileft) {
-			float irr, irl;
+			float irr, irl, iur, iul, ivr, ivl;
 			Vertex vr, vl;
 			unsigned int trl, trr;
 			const KDTreeNode *ktl, *ktr;
@@ -122,27 +124,27 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 			irr = (vright-origin).getSquaredLength();
 
 			if (irl < irr) {
-				ktl = intersect (kdtree->getLeft(), vl, irl, trl);
+				ktl = intersect (kdtree->getLeft(), vl, irl, iul, ivl, trl);
 				if (ktl == NULL) {
-					return intersect (kdtree->getRight(), intersectionPoint, ir, triangle);
+					return intersect (kdtree->getRight(), intersectionPoint, ir, iu, iv, triangle);
 				}	else {
-					if (kdtree->getLeft()->getBoundingBox().contains(vl.getPos())) { intersectionPoint = vl; ir = irl; triangle = trl; return ktl; }
+					if (kdtree->getLeft()->getBoundingBox().contains(vl.getPos())) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
 					else {
-						ktr = intersect (kdtree->getRight(), vr, irr, trr);
-						if (irl < irr || ktr == NULL) { intersectionPoint = vl; ir = irl; triangle = trl; return ktl; }
-						else { intersectionPoint = vr; ir = irr; triangle = trr; return ktr; }
+						ktr = intersect (kdtree->getRight(), vr, irr, iur, ivr, trr);
+						if (irl < irr || ktr == NULL) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
+						else { intersectionPoint = vr; ir = irr; iu = iur; iv = ivr; triangle = trr; return ktr; }
 					}
 				}
 			}
 			else {
-				ktr = intersect (kdtree->getRight(), vr, irr, trr);
-				if (ktr == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, triangle);
+				ktr = intersect (kdtree->getRight(), vr, irr, iur, ivr, trr);
+				if (ktr == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
 				else {
-					if (kdtree->getRight()->getBoundingBox().contains(vr.getPos())) { intersectionPoint = vr; ir = irr; triangle = trr; return ktr; }
+					if (kdtree->getRight()->getBoundingBox().contains(vr.getPos())) { intersectionPoint = vr; ir = irr; iu = iur; iv = ivr; triangle = trr; return ktr; }
 					else {
-						ktl = intersect (kdtree->getLeft(), vl, irl, trl);
-						if (irl < irr && ktl != NULL) { intersectionPoint = vl; ir = irl; triangle = trl; return ktl; }
-						else { intersectionPoint = vr; ir = irr; triangle = trr; return ktr; }
+						ktl = intersect (kdtree->getLeft(), vl, irl, iul, ivl, trl);
+						if (irl < irr && ktl != NULL) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
+						else { intersectionPoint = vr; ir = irr; iu = iur; iv = ivr; triangle = trr; return ktr; }
 					}
 				}
 			}
@@ -160,7 +162,7 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
  *
  * @see http://fr.wikipedia.org/wiki/Lancer_de_rayon#Exemple_du_calcul_de_l.27intersection_d.27un_rayon_et_d.27un_triangle
  */
-bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir) const {
+bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Vertex & intersectionPoint, float & ir, float & iu, float & iv) const {
 	Vec3Df v = v1.getPos() - v0.getPos();
 	Vec3Df u = v2.getPos() - v0.getPos();
 	Vec3Df nn = Vec3Df::crossProduct(u, v);
@@ -169,8 +171,8 @@ bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Ve
 	Vec3Df uotr = Vec3Df::crossProduct (u, otr);
 
 	float c = Vec3Df::dotProduct (nn, direction);
-	float iu = Vec3Df::dotProduct (otrv, direction)/c;
-	float iv = Vec3Df::dotProduct (uotr, direction)/c;
+	iu = Vec3Df::dotProduct (otrv, direction)/c;
+	iv = Vec3Df::dotProduct (uotr, direction)/c;
 	ir = -Vec3Df::dotProduct (nn, otr)/c;
 
 	// We return the intersection point
@@ -187,19 +189,19 @@ bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Ve
 /**
  * Computes the intersection of a light ray and a triangle
  */
-bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir) const {
+bool Ray::intersect (const Object & object, const Triangle & tri, Vertex & intersectionPoint, float & ir, float & iu, float & iv) const {
 	Vertex v0 = object.getMesh().getVertices()[tri.getVertex(0)];
 	Vertex v1 = object.getMesh().getVertices()[tri.getVertex(1)];
 	Vertex v2 = object.getMesh().getVertices()[tri.getVertex(2)];
-	return intersect (v0, v1, v2, intersectionPoint, ir);
+	return intersect (v0, v1, v2, intersectionPoint, ir, iu, iv);
 }
 
 /**
  * Tests intersection with an object
  */
-bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir, unsigned int & triangle) const {
+bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & ir, float & iu, float & iv, unsigned int & triangle) const {
 	// Find KD-Tree node
-	const KDTreeNode* ktf = intersect (object.getKdTree(), intersectionPoint, ir, triangle);
+	const KDTreeNode* ktf = intersect (object.getKdTree(), intersectionPoint, ir, iu, iv, triangle);
 
 	// If not found return false
 	return (ktf != NULL);
@@ -208,22 +210,24 @@ bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & 
 /**
  * Tests intersection with the scene
  */
-bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, unsigned int & triangle) const {
+bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, float & iu, float & iv, unsigned int & triangle) const {
 	float ir = INFINITY;
 	bool hasIntersection = false;
 
-	float tmpIr = 0.;
+	float tmpIr = 0., tmpIu, tmpIv;
 	bool tmpIntersection = false;
 	Vertex tmpPoint;
 	unsigned int tritri;
 	for (vector<Object>::const_iterator obj = scene.getObjects().begin(); obj != scene.getObjects().end(); obj++) {
-		tmpIntersection = intersect (*obj, tmpPoint, tmpIr, tritri);
+		tmpIntersection = intersect (*obj, tmpPoint, tmpIr, tmpIu, tmpIv, tritri);
 		if (tmpIntersection) {
 			hasIntersection = true;
 			if (tmpIr < ir) {
 				triangle = tritri;
 				*intersectionObject = &(*obj);
 				ir = tmpIr;
+				iu = tmpIu;
+				iv = tmpIv;
 				intersectionPoint = tmpPoint;
 			} //else cout << tmpIr << endl;
 		}
