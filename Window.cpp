@@ -31,7 +31,6 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QTime>
 
 #include "RayTracer.h"
 
@@ -53,6 +52,7 @@ Window::Window () : QMainWindow (NULL) {
     imageLabel->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel->setScaledContents (true);
     imageLabel->setPixmap (QPixmap::fromImage (rayImage));
+		connect (RayTracer::getInstance(), SIGNAL(finished(const QImage&)), this, SLOT(setRayImage (const QImage&)));
     
     renderingLayout->addWidget (viewer);
     renderingLayout->addWidget (imageLabel);
@@ -75,16 +75,13 @@ Window::~Window () {
 
 }
 
+void Window::setRayImage (const QImage & img) {
+	imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
 void Window::renderRayImage () {
-		QTime timer;
-		timer.start();
-		cout << " ----- Raytracing: Start! ----- " << endl;
-    Camera cam = viewer->getCamera ();
-    RayTracer * rayTracer = RayTracer::getInstance ();
-    rayImage = rayTracer->render (cam);
-    imageLabel->setPixmap (QPixmap::fromImage (rayImage));
-		cout << " ----- Raytracing: Elapsed: " << timer.elapsed() << "ms ----- " << endl;
-    
+    RayTracer::getInstance ()->setCamera (viewer->getCamera());
+		RayTracer::getInstance ()->start ();
 }
 
 void Window::setBGColor () {
@@ -121,8 +118,10 @@ void Window::about () {
 void Window::displayPointInfo (QMouseEvent* me) {
 	Camera cam = viewer->getCamera ();
 	RayTracer * rayTracer = RayTracer::getInstance ();
+
 	cout << "Raytracing: Clicked: (" << me->x() << ", " << me->y() << ")" << endl;
-	Scene::getInstance()->setSelectedBoundingBox(rayTracer->debug (cam, (unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1));
+
+	Scene::getInstance()->setSelectedBoundingBox(rayTracer->debug ((unsigned int)me->x(), cam.screenHeight() - (unsigned int)me->y() + 1));
 	viewer->updateGL ();
 }
 
@@ -164,6 +163,11 @@ void Window::initControlWidget () {
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
     rayLayout->addWidget (saveButton);
 
+		progressbar = new QProgressBar (rayGroupBox);
+		rayLayout->addWidget (progressbar);
+		connect (RayTracer::getInstance(), SIGNAL(init(int,int)), progressbar, SLOT(setRange(int,int)));
+		connect (RayTracer::getInstance(), SIGNAL(progress(int)), progressbar, SLOT(setValue(int)));
+
     layout->addWidget (rayGroupBox);
     
     QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);
@@ -178,7 +182,7 @@ void Window::initControlWidget () {
     globalLayout->addWidget (aboutButton);
     
     QPushButton * quitButton  = new QPushButton ("Quit", globalGroupBox);
-    connect (quitButton, SIGNAL (clicked()) , qApp, SLOT (closeAllWindows()));
+    connect (quitButton, SIGNAL (clicked()), qApp, SLOT (closeAllWindows()));
     globalLayout->addWidget (quitButton);
 
     layout->addWidget (globalGroupBox);

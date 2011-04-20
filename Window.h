@@ -13,6 +13,7 @@
 #include <QImage>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QProgressBar>
 
 #include <vector>
 #include <string>
@@ -38,9 +39,9 @@ public slots :
     void exportRayImage ();
     void about ();
 		void displayPointInfo (QMouseEvent* me);
+		void setRayImage (const QImage & img);
     
 private :
-    
     void initControlWidget ();
         
     QActionGroup * actionGroup;
@@ -50,6 +51,7 @@ private :
     GLViewer * viewer;
     QClickableLabel * imageLabel;
     QImage rayImage;
+		QProgressBar * progressbar ;
 };
 
 #endif // WINDOW_H

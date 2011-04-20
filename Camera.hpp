@@ -35,6 +35,8 @@ class Camera {
 			computeProjectionViewMatrix();
 		};
 
+		Camera() : camera (qglviewer::Camera()) { }
+
 		/**
 		 * Camera Class Destructor
 		 *

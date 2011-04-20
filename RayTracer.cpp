@@ -32,7 +32,7 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned int j, bool debug, BoundingBox & bb) {
+Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, BoundingBox & bb) {
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -134,7 +134,12 @@ Vec3Df RayTracer::raytraceSingle (const Camera & cam, unsigned int i,	unsigned i
 /**
  * Renders the given scene with the given camera parameters into a QImage, and returns it.
  */
-QImage RayTracer::render (const Camera & cam) {
+QImage RayTracer::render () {
+	// Count elapsed time
+	QTime timer;
+	timer.start();
+	cout << " ----- Raytracing: Start! ----- " << endl;
+
 	//for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getKdTree()->show();
 	// Create an image to hold the final raytraced render
 	QImage image (QSize (cam.screenWidth(), cam.screenHeight()), QImage::Format_RGB888);
@@ -142,12 +147,12 @@ QImage RayTracer::render (const Camera & cam) {
 	// For each camera pixel, cast a ray and compute its reflecting color
 	BoundingBox b;
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
-		cout << "Done: " << float(i)/float(cam.screenWidth())*100. << "%" << endl;
+		emit progress (i);
 
 //pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			// Raytrace
-			Vec3Df c = raytraceSingle (cam, i, j, false, b);
+			Vec3Df c = raytraceSingle (i, j, false, b);
 			
 			// Depth map
 			//float f = (c - cam.position()).getSquaredLength();
@@ -160,11 +165,12 @@ QImage RayTracer::render (const Camera & cam) {
 	}
 
 	// Return image
+	cout << " ----- Raytracing: Elapsed: " << timer.elapsed() << "ms ----- " << endl;
 	return image;
 }
 
-BoundingBox RayTracer::debug (const Camera & cam, unsigned int i, unsigned int j) {
+BoundingBox RayTracer::debug (unsigned int i, unsigned int j) {
 	BoundingBox bb;
-	raytraceSingle (cam, i, j, true, bb);
+	raytraceSingle (i, j, true, bb);
 	return bb;
 }

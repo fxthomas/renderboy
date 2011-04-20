@@ -45,11 +45,7 @@ const float BOUNDINGBOX_EPSILON = 0.0001f;
 
 class BoundingBox {
 public:
-<<<<<<< local
-		static const float BBOX_FUZZINESS = 0.05f;
-=======
-		static const float BBOX_FUZZINESS = 0.0f;
->>>>>>> other
+		static const float BBOX_FUZZINESS = 0.00f;
 
     BoundingBox () : minBb (Vec3Df (0.0f, 0.0f, 0.0f)), maxBb (Vec3Df (0.0f, 0.0f, 0.0f)) {}
     BoundingBox (const Vec3Df & p) : minBb (p), maxBb (p) {}

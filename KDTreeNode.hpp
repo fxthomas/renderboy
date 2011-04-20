@@ -102,12 +102,8 @@ class KDTreeNode {
 		/**
 		 * Tree fuzziness
 		 */
-<<<<<<< local
 		//const static float FUZZINESS=0.12f;
 		const static float FUZZINESS=0.05f;
-=======
-		const static float FUZZINESS=0.12f;
->>>>>>> other
 
 		/**
 		 * Setters and getters
