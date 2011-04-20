@@ -66,7 +66,7 @@ class KDTreeNode {
 		 * Class destructor
 		 */
 		~KDTreeNode () {
-			cout << "Destroying KD-Tree " << this << endl;
+			cout << "     Destroying KD-Tree " << this << endl;
 			if (kleft != NULL) { delete kleft; kleft = NULL; }
 			if (kright != NULL) { delete kright; kright = NULL; }
 		}
@@ -76,7 +76,7 @@ class KDTreeNode {
 		 * 
 		 * @author François-Xavier Thomas
 		 */
-		KDTreeNode(const Mesh & m) : mesh(&m),kleft(NULL),kright(NULL) { cout << "Creating KD-Tree " << this << endl; load (); }
+		KDTreeNode(const Mesh & m) : mesh(&m),kleft(NULL),kright(NULL) { cout << "     Creating KD-Tree " << this << endl; load (); }
 
 		/**
 		 * Clear KD-Tree

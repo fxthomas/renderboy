@@ -138,7 +138,7 @@ QImage RayTracer::render () {
 	// Count elapsed time
 	QTime timer;
 	timer.start();
-	cout << " ----- Raytracing: Start! ----- " << endl;
+	cout << " (R) Raytracing: Start" << endl;
 
 	//for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getKdTree()->show();
 	// Create an image to hold the final raytraced render
@@ -165,7 +165,7 @@ QImage RayTracer::render () {
 	}
 
 	// Return image
-	cout << " ----- Raytracing: Elapsed: " << timer.elapsed() << "ms ----- " << endl;
+	cout << " (R) Raytracing done! (" << timer.elapsed() << " ms)" << endl;
 	return image;
 }
 

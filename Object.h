@@ -20,15 +20,15 @@ using namespace std;
 
 class Object {
 public:
-    inline Object () { cout << "Creating object " << this << endl; }
+    inline Object () { cout << "     Creating object " << this << endl; }
     inline Object (const Mesh & mesh, const Material & mat) :mesh (mesh), mat (mat) {
-				cout << "Creating object " << this << endl;
+				cout << "     Creating object " << this << endl;
         updateBoundingBox ();
 				kdt = NULL;
     }
 
     virtual ~Object () {
-			cout << "Destroying object " << this << endl;
+			cout << "     Destroying object " << this << endl;
 			if (kdt != NULL) { delete kdt; kdt = NULL; }
 		}
 
@@ -43,7 +43,7 @@ public:
 
 		inline void computeKdTree () {
 			if (kdt == NULL) {
-				cout << "Building KD-Tree..." << endl;
+				cout << " (I) Building KD-Tree..." << endl;
 				kdt = new KDTreeNode (mesh);
 			}
 		}

@@ -47,6 +47,7 @@ class RayTracer : public QThread {
     inline RayTracer (QObject* parent = 0) : QThread(parent) { }
     inline virtual ~RayTracer () {}
 		virtual void run() { 
+			cout << " (I) RayTracer: Starting thread" << endl;
 			// Initialize everything listening to the raytracer status
 			emit init (0, cam.screenWidth());
 
@@ -55,6 +56,7 @@ class RayTracer : public QThread {
 
 			// Signel the listeners the image is ready!
 			emit finished (renderedimage);
+			cout << " (I) RayTracer: End of thread" << endl;
 		}
     
 	private:
