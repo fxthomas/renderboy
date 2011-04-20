@@ -109,8 +109,8 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 	else if (kdtree->getRight() == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
 	else {
 		Vec3Df vleft, vright;
-		bool ileft = intersectFuzzy(kdtree->getLeft()->getBoundingBox(), vleft);
-		bool iright = intersectFuzzy(kdtree->getRight()->getBoundingBox(), vright);
+		bool ileft = intersect(kdtree->getLeft()->getBoundingBox(), vleft);
+		bool iright = intersect(kdtree->getRight()->getBoundingBox(), vright);
 
 		if (!ileft && iright) return intersect (kdtree->getRight(), intersectionPoint, ir, iu, iv, triangle);
 		else if (!iright && ileft) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
@@ -128,7 +128,7 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 				if (ktl == NULL) {
 					return intersect (kdtree->getRight(), intersectionPoint, ir, iu, iv, triangle);
 				}	else {
-					if (kdtree->getLeft()->getBoundingBox().contains(vl.getPos())) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
+					if (false && kdtree->getLeft()->getBoundingBox().contains(vl.getPos()) && !kdtree->getRight()->getBoundingBox().contains(vl.getPos())) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
 					else {
 						ktr = intersect (kdtree->getRight(), vr, irr, iur, ivr, trr);
 						if (irl < irr || ktr == NULL) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
@@ -140,7 +140,7 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 				ktr = intersect (kdtree->getRight(), vr, irr, iur, ivr, trr);
 				if (ktr == NULL) return intersect (kdtree->getLeft(), intersectionPoint, ir, iu, iv, triangle);
 				else {
-					if (kdtree->getRight()->getBoundingBox().contains(vr.getPos())) { intersectionPoint = vr; ir = irr; iu = iur; iv = ivr; triangle = trr; return ktr; }
+					if (false && kdtree->getRight()->getBoundingBox().contains(vr.getPos()) && !kdtree->getLeft()->getBoundingBox().contains(vr.getPos())) { intersectionPoint = vr; ir = irr; iu = iur; iv = ivr; triangle = trr; return ktr; }
 					else {
 						ktl = intersect (kdtree->getLeft(), vl, irl, iul, ivl, trl);
 						if (irl < irr && ktl != NULL) { intersectionPoint = vl; ir = irl; iu = iul; iv = ivl; triangle = trl; return ktl; }
@@ -148,9 +148,11 @@ const KDTreeNode* Ray::intersect (const KDTreeNode* kdtree, Vertex & intersectio
 					}
 				}
 			}
+		}	else {
+			return NULL;
 		}
-		else return NULL;
 	}
+	cout << "Houston... Houston..." << endl;
 	return NULL;
 }
 

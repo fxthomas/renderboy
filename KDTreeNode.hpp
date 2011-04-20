@@ -92,18 +92,18 @@ class KDTreeNode {
 		/**
 		 * Number of random samples for the median
 		 */
-		const static unsigned int NSAMPLES = 100;
+		const static unsigned int NSAMPLES = 500;
 
 		/**
 		 * Maximum leaf size
 		 */
-		const static unsigned int LEAFSIZE = 1;
+		const static unsigned int LEAFSIZE = 3;
 
 		/**
 		 * Tree fuzziness
 		 */
 		//const static float FUZZINESS=0.12f;
-		const static float FUZZINESS=0.05f;
+		const static float FUZZINESS=0.07f;
 
 		/**
 		 * Setters and getters

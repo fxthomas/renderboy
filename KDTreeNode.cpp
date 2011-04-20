@@ -184,20 +184,23 @@ bool KDTreeNode::loadVertices (vector<unsigned int> & verts, vector<unsigned int
 			//else cout << "No tri right (" << sl << "," << sr << ")" << endl;
 		}
 
-		// Create left node
-		if (lverts.size() > 0) {
+		if (lverts.size() > 0 && rverts.size() > 0) {
+			// Create left node
 			kleft = new KDTreeNode ();
 			kleft->mesh = mesh;
 			kleft->bbox = l_bbox;
 			kleft->loadVertices(lverts, ltri, (axis+1)%3);
-		}
 
-		// Create right node
-		if (rverts.size() > 0) {
+			// Create right node
 			kright = new KDTreeNode ();
 			kright->mesh = mesh;
 			kright->bbox = r_bbox;
 			kright->loadVertices(rverts, rtri, (axis+1)%3);
+		} else {
+			kleft = NULL;
+			kright = NULL;
+			data = verts;
+			triangles = tri;
 		}
 	}
 	return true;

@@ -146,6 +146,9 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
  */
 QImage RayTracer::render () {
 	// Count elapsed time
+	
+	for (vector<Object>::iterator it = Scene::getInstance()->getObjects().begin(); it != Scene::getInstance()->getObjects().end(); it++) it->getMesh().recomputeSmoothVertexNormals(1);
+
 	QTime timer;
 	timer.start();
 	cout << " (R) Raytracing: Start" << endl;
