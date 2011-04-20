@@ -50,7 +50,10 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 	Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
 	Vec3Df step = stepX + stepY;
 	Vec3Df dir = direction + step;
-	if (debug) cout << " (I) Ray Direction: " << dir << endl;
+	if (debug) {
+		cout << "     [ Basic Information ]" << endl;
+		cout << "       Ray Direction: " << dir << endl << endl;
+	}
 
 	Ray ray (camPos, dir);
 	Vertex intersectionPoint;
@@ -58,23 +61,24 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 	unsigned int triangle;
 	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, triangle);
 	if (debug) {
-		cout << " (I) Kd-Tree dump :" << endl;
+		cout << "     [ kD-Tree ]" << endl;
 		float f; 
 		Vertex vd;
 		const KDTreeNode* kdt = ray.intersect (Scene::getInstance()->getObjects()[1].getKdTree(), vd, f, triangle);
-		if (kdt == NULL) cout << "     -> The Kd-Tree is NULL..." << endl;
-		else {
+		if (kdt != NULL) {
 			bb = kdt->getBoundingBox();
-			cout << "     -> Point distance: " << f << endl;
-			for (vector<unsigned int>::const_iterator it = kdt->getTriangles().begin(); it != kdt->getTriangles().end(); it++) cout << "     -> Triangle: " << *it << endl;
-		}
+			cout << "       Point distance: " << f << endl;
+			for (vector<unsigned int>::const_iterator it = kdt->getTriangles().begin(); it != kdt->getTriangles().end(); it++) cout << "       Triangle: " << *it << endl;
+		} else cout << "       Not found... ;(" << endl;
+		cout << endl;
 	}
 	if (hasIntersection) {
 		if (debug) {
-			cout << " (I) Intersection with " << intersectionPoint.getPos() << endl;
-			cout << " (I) Object number of triangles: " << intersectionObject->getMesh().getTriangles().size() << endl;
-			cout << " (I) Intersection with triangle: " << triangle << endl;
-			cout << " (I) Material: " << intersectionObject->getMaterial() << endl << endl;
+			cout << "     [ Intersection ]" << endl;
+			cout << "       Intersection with " << intersectionPoint.getPos() << endl;
+			cout << "       Object number of triangles: " << intersectionObject->getMesh().getTriangles().size() << endl;
+			cout << "       Intersection with triangle: " << triangle << endl;
+			cout << "       Material: " << intersectionObject->getMaterial() << endl << endl;
 		}
 
 		Vec3Df c = intersectionObject->getMaterial().getColor();
@@ -103,12 +107,12 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 
 			// Raytracing debug
 			if (debug) {
-				cout << " ------ Light -------" << endl;
-				cout << " (I) Normal: " << intersectionPoint.getNormal() << endl;
-				cout << " (I) Diffuse Factor: " << sc << endl;
-				cout << " (I) Diffuse Color: " << diffuse << endl;
-				cout << " (I) Specular Factor: " << sc << endl;
-				cout << " (I) Specular Color: " << specular << endl << endl;
+				cout << "     [ Light ]" << endl;
+				cout << "       Normal: " << intersectionPoint.getNormal() << endl;
+				cout << "       Diffuse Factor: " << sc << endl;
+				cout << "       Diffuse Color: " << diffuse << endl;
+				cout << "       Specular Factor: " << sc << endl;
+				cout << "       Specular Color: " << specular << endl << endl;
 			}
 		}
 
@@ -119,14 +123,14 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 
 		// Debug total color
 		if (debug) {
-			cout << " ------ Color blend ------" << endl;
-			cout << " (I) Computed Color: " << c << endl;
-			cout << " (I) Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
+			cout << "     [ Color blend ]" << endl;
+			cout << "       Computed Color: " << c << endl;
+			cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
 		}
 
 		return c;
 	} else {
-		if (debug) cout << " (I) No intersection" << endl << endl;
+		if (debug) cout << "     [ No intersection ]" << endl << endl;
 		return backgroundColor;
 	}
 }
