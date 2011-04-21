@@ -55,6 +55,9 @@ Window::Window () : QMainWindow (NULL) {
 		exit (1);
 	}
 
+	// Initialize scene
+	(void) Scene::getInstance();
+
 	QGroupBox * renderingGroupBox = new QGroupBox (this);
 	QHBoxLayout * renderingLayout = new QHBoxLayout (renderingGroupBox);
 
@@ -80,9 +83,6 @@ Window::Window () : QMainWindow (NULL) {
 
 	setMinimumWidth (800);
 	setMinimumHeight (400);
-
-	// Initialize scene
-	(void) Scene::getInstance();
 
 	// Remove splash
 	splash->finish(this);
@@ -175,7 +175,13 @@ void Window::initControlWidget () {
 
 	QLabel * fuzzyLabel = new QLabel ("kD-Tree fuzziness", rayGroupBox);
 	rayLayout->addWidget (fuzzyLabel);
+
 	QSlider * fuzzySlider = new QSlider (Qt::Horizontal, rayGroupBox);
+	fuzzySlider->setTracking (false);
+	fuzzySlider->setMinimum (0); // Fuzziness = 10^(-3 + Value/8))
+	fuzzySlider->setMaximum (20);
+	fuzzySlider->setValue (6);
+	connect (fuzzySlider, SIGNAL (valueChanged(int)), Scene::getInstance(), SLOT (setFuzziness(int)));
 	rayLayout->addWidget (fuzzySlider);
 
 	QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);

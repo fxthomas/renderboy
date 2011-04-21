@@ -44,11 +44,11 @@ public:
 		inline void computeKdTree () {
 			if (kdt == NULL) {
 				cout << " (I) Building KD-Tree..." << endl;
-				kdt = new KDTreeNode (mesh);
+				kdt = new KDTreeNode (mesh, pow(10,-3.f+6.f/8.f));
 			}
 		}
 
-		inline const KDTreeNode * getKdTree () const {
+		inline KDTreeNode * getKdTree () const {
 			return kdt;
 		}
 

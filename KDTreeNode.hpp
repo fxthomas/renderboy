@@ -77,6 +77,14 @@ class KDTreeNode : public QObject {
 		KDTreeNode() : split(0),kleft(NULL),kright(NULL) { /*cout << "Creating KD-Tree " << this << endl;*/ }
 
 		/**
+		 * KDTreeNode Class Constructor. You first have to load the KD-Tree with a mesh to use it.
+		 * 
+		 * @see load
+		 * @author François-Xavier Thomas
+		 */
+		KDTreeNode(float fuzz) : fuzziness(fuzz),split(0),kleft(NULL),kright(NULL) { /*cout << "Creating KD-Tree " << this << endl;*/ }
+
+		/**
 		 * KDTreeNode Class Constructor, with direct mesh loading.
 		 * 
 		 * @author François-Xavier Thomas
@@ -94,7 +102,7 @@ class KDTreeNode : public QObject {
 		 * Class destructor
 		 */
 		~KDTreeNode () {
-			cout << "     Destroying KD-Tree " << this << endl;
+			//cout << "     Destroying KD-Tree " << this << endl;
 			if (kleft != NULL) { delete kleft; kleft = NULL; }
 			if (kright != NULL) { delete kright; kright = NULL; }
 		}
@@ -156,5 +164,9 @@ class KDTreeNode : public QObject {
 		inline const KDTreeNode & find (const Vec3Df & v) const { return _find (v, 0); }
 
 		public slots:
-			void setFuzziness (float f) { fuzziness = f; }
+			void setFuzziness (float f) {
+				fuzziness = f;
+				if (kleft != NULL) kleft->setFuzziness(f);
+				if (kright != NULL) kright->setFuzziness(f);
+			}
 };

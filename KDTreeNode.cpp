@@ -189,13 +189,13 @@ bool KDTreeNode::loadVertices (vector<unsigned int> & verts, vector<unsigned int
 
 		if (lverts.size() > 0 && rverts.size() > 0 && lverts.size()+rverts.size() > LEAFSIZE) {
 			// Create left node
-			kleft = new KDTreeNode ();
+			kleft = new KDTreeNode (fuzziness);
 			kleft->mesh = mesh;
 			kleft->bbox = l_bbox;
 			kleft->loadVertices(lverts, ltri, (axis+1)%3);
 
 			// Create right node
-			kright = new KDTreeNode ();
+			kright = new KDTreeNode (fuzziness);
 			kright->mesh = mesh;
 			kright->bbox = r_bbox;
 			kright->loadVertices(rverts, rtri, (axis+1)%3);

@@ -10,13 +10,17 @@
 
 #include <iostream>
 #include <vector>
+#include <QObject>
+#include <cmath>
 
 #include "Object.h"
 #include "Light.h"
 #include "BoundingBox.h"
 
-class Scene {
-public:
+class Scene : public QObject {
+	Q_OBJECT
+
+	public:
     static Scene * getInstance ();
     static void destroyInstance ();
     
@@ -32,16 +36,29 @@ public:
 		inline const BoundingBox & getSelectedBoundingBox() const { return selbb; }
 		inline void setSelectedBoundingBox(const BoundingBox & bb) { selbb = bb; };
     
-protected:
+	protected:
     Scene ();
     virtual ~Scene ();
     
-private:
+	private:
     void buildDefaultScene (bool HD);
     std::vector<Object> objects;
     std::vector<Light> lights;
     BoundingBox bbox;
 		BoundingBox selbb;
+
+	public slots:
+		void setFuzziness (int f) {
+			float ff = pow (10.f, -3.f + float(f)/8.f);
+			cout << " (I) Setting Fuzziness to " << ff << endl;
+			for (vector<Object>::iterator it = objects.begin(); it != objects.end(); it++) {
+				cout << " (I) Rebuilding kD-Tree...";
+				it->getKdTree()->setFuzziness (ff);
+				it->getKdTree()->rebuild();
+				cout << "done" << endl;
+			}
+			cout << endl;
+		}
 };
 
 
