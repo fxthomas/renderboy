@@ -14,6 +14,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <QObject>
 
 #include "Mesh.h"
 #include "BoundingBox.h"
@@ -29,13 +30,16 @@ using namespace std;
  *
  * @author François-Xavier Thomas <fx.thomas@gmail.com>
  */
-class KDTreeNode {
+class KDTreeNode : public QObject {
+	Q_OBJECT
+
 	protected:
 		/**
 		 * Generate sub-KD-Tree data
 		 */
 		bool loadVertices (vector<unsigned int> & verts, vector<unsigned int> & tri, unsigned int axis);
 
+		float fuzziness;
 		float split;
 		const Mesh *mesh;
 		KDTreeNode *kleft;
@@ -50,9 +54,19 @@ class KDTreeNode {
 
 	public:
 		/**
-		 * Generate KD-Tree data
+		 * Number of random samples for the median
 		 */
-		void load ();
+		const static unsigned int NSAMPLES = 200;
+
+		/**
+		 * Maximum leaf size
+		 */
+		const static unsigned int LEAFSIZE = 2;
+
+		/**
+		 * Tree fuzziness
+		 */
+		//const static float FUZZINESS=0.12f;
 
 		/**
 		 * KDTreeNode Class Constructor. You first have to load the KD-Tree with a mesh to use it.
@@ -61,6 +75,20 @@ class KDTreeNode {
 		 * @author François-Xavier Thomas
 		 */
 		KDTreeNode() : split(0),kleft(NULL),kright(NULL) { /*cout << "Creating KD-Tree " << this << endl;*/ }
+
+		/**
+		 * KDTreeNode Class Constructor, with direct mesh loading.
+		 * 
+		 * @author François-Xavier Thomas
+		 */
+		KDTreeNode(const Mesh & m) : fuzziness(0.005f),mesh(&m),kleft(NULL),kright(NULL) { cout << "     Creating KD-Tree " << this << endl; load (); }
+
+		/**
+		 * KDTreeNode Class Constructor, with direct mesh loading and fuzziness.
+		 * 
+		 * @author François-Xavier Thomas
+		 */
+		KDTreeNode(const Mesh & m, float fuzz) : fuzziness(fuzz),mesh(&m),kleft(NULL),kright(NULL) { cout << "     Creating KD-Tree " << this << endl; load (); }
 
 		/**
 		 * Class destructor
@@ -72,11 +100,9 @@ class KDTreeNode {
 		}
 
 		/**
-		 * KDTreeNode Class Constructor, with direct mesh loading.
-		 * 
-		 * @author François-Xavier Thomas
+		 * Generate KD-Tree data
 		 */
-		KDTreeNode(const Mesh & m) : mesh(&m),kleft(NULL),kright(NULL) { cout << "     Creating KD-Tree " << this << endl; load (); }
+		void load ();
 
 		/**
 		 * Clear KD-Tree
@@ -90,20 +116,12 @@ class KDTreeNode {
 		}
 
 		/**
-		 * Number of random samples for the median
+		 * Rebuild kD-Tree
 		 */
-		const static unsigned int NSAMPLES = 200;
-
-		/**
-		 * Maximum leaf size
-		 */
-		const static unsigned int LEAFSIZE = 1;
-
-		/**
-		 * Tree fuzziness
-		 */
-		//const static float FUZZINESS=0.12f;
-		const static float FUZZINESS=0.005f;
+		void rebuild () {
+			clear();
+			load();
+		}
 
 		/**
 		 * Setters and getters
@@ -136,4 +154,7 @@ class KDTreeNode {
 		 * Find vertices
 		 */
 		inline const KDTreeNode & find (const Vec3Df & v) const { return _find (v, 0); }
+
+		public slots:
+			void setFuzziness (float f) { fuzziness = f; }
 };
