@@ -103,7 +103,7 @@ class KDTreeNode {
 		 * Tree fuzziness
 		 */
 		//const static float FUZZINESS=0.12f;
-		const static float FUZZINESS=0.06f;
+		const static float FUZZINESS=0.005f;
 
 		/**
 		 * Setters and getters

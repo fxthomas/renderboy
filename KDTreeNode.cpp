@@ -68,8 +68,7 @@ bool KDTreeNode::_lineInBox (const Vec3Df & origin, const Vec3Df & direction, co
 }
 
 bool KDTreeNode::_triangleInBox (const Vec3Df & v0, const Vec3Df & v1, const Vec3Df & v2, const BoundingBox & bbox) const {
-	Vec3Df d = (bbox.getMax() - bbox.getMin())*FUZZINESS;
-	BoundingBox bbox2 = BoundingBox (bbox.getMin() - d, bbox.getMax() + d);
+	BoundingBox bbox2 = BoundingBox (bbox.getMin() - Vec3Df(FUZZINESS,FUZZINESS,FUZZINESS), bbox.getMax() + Vec3Df(FUZZINESS,FUZZINESS,FUZZINESS));
 	Vec3Df d0 = v1 - v0;
 	Vec3Df d1 = v2 - v1;
 	Vec3Df d2 = v0 - v2;
