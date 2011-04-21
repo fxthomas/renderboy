@@ -56,8 +56,12 @@ Window::Window () : QMainWindow (NULL) {
 	}
 
 	// Initialize scene
+	splash->showMessage("Loading scene...");
+	qApp->processEvents();
 	(void) Scene::getInstance();
 
+	splash->showMessage("Loading main window...");
+	qApp->processEvents();
 	QGroupBox * renderingGroupBox = new QGroupBox (this);
 	QHBoxLayout * renderingLayout = new QHBoxLayout (renderingGroupBox);
 
