@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET   = raymini
+TARGET   = renderboy-dbg
 CONFIG  += qt opengl warn_on release thread
 
 HEADERS = Window.h \
