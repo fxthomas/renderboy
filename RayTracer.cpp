@@ -159,6 +159,7 @@ QImage RayTracer::render () {
 
 	// For each camera pixel, cast a ray and compute its reflecting color
 	BoundingBox b;
+#pragma omp parallel for default(shared) schedule(dynamic)
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
 		emit progress (i);
 
