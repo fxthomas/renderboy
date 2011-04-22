@@ -59,8 +59,8 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 	Vertex intersectionPoint;
 	const Object* intersectionObject = NULL;
 	unsigned int triangle;
-	float iu, iv;
-	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, iu, iv, triangle);
+	float ir, iu, iv;
+	bool hasIntersection = ray.intersect (*scene, intersectionPoint, &intersectionObject, ir, iu, iv, triangle);
 	if (debug) {
 		cout << "     [ kD-Tree ]" << endl;
 		float f,fu,fv;
@@ -83,8 +83,17 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 		}
 
 		Vec3Df c = intersectionObject->getMaterial().getColor();
+		Vec3Df color(0, 0, 0);
 		Vec3Df diffuse;
 		Vec3Df specular;
+
+		bool occlusion= false;
+		Vec3Df oc_dir;
+		Vertex tmp;
+		float ir, iu_tmp, iv_tmp;
+		unsigned int tri_tmp;
+		
+		
 
 		Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
 		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
@@ -95,9 +104,25 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 		vv.normalize();
 
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
+			occlusion=false;
 			Vec3Df lpos = cam.toWorld (light->getPos());
 			Vec3Df lm = lpos - intersectionPoint.getPos();
 			lm.normalize();
+
+			// Test Occlusion
+
+			oc_dir=lpos-intersectionPoint.getPos();	
+			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
+			occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength()) && (ir>0.00000001);
+
+			//cout<<"distance entre le point et la caméra: "<<oc_dir.getLength()<<endl;
+				
+			if (occlusion) {
+				//cout<<"Il y a occlusion ici: " <<intersectionPoint.getPos()<<endl;
+				diffuse= Vec3Df(0.f, 0.f, 0.f);
+				specular=Vec3Df(0.f, 0.f, 0.f);
+				continue;
+			}
 
 			// Diffuse Light
 			float sc = Vec3D<float>::dotProduct(lm, normal);
@@ -123,9 +148,9 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 			}
 		}
 		// Total color blend
-		c[0] = (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
-		c[1] = (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
-		c[2] = (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
+		color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
+		color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
+		color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
 		// Debug total color
 		if (debug) {
@@ -134,7 +159,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 			cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
 		}
 
-		return c;
+		return color;
 	} else {
 		if (debug) cout << "     [ No intersection ]" << endl << endl;
 		return backgroundColor;

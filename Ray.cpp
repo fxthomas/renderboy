@@ -212,12 +212,12 @@ bool Ray::intersect (const Object & object, Vertex & intersectionPoint, float & 
 /**
  * Tests intersection with the scene
  */
-bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, float & iu, float & iv, unsigned int & triangle) const {
-	float ir = INFINITY;
+bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Object ** intersectionObject, float & ir, float & iu, float & iv, unsigned int & triangle) const {
+	ir = INFINITY;
 	bool hasIntersection = false;
 
 	float tmpIr = 0., tmpIu, tmpIv;
-	bool tmpIntersection = false;
+	bool tmpIntersection = false;f
 	Vertex tmpPoint;
 	unsigned int tritri;
 	for (vector<Object>::const_iterator obj = scene.getObjects().begin(); obj != scene.getObjects().end(); obj++) {
