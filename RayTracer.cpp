@@ -32,7 +32,7 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, BoundingBox & bb) {
+Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb) {
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -113,7 +113,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 
 			oc_dir=lpos-intersectionPoint.getPos();	
 			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
-			occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength()) && (ir>0.00000001);
+			occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
 			//cout<<"distance entre le point et la caméra: "<<oc_dir.getLength()<<endl;
 				
