@@ -9,6 +9,8 @@
 #include "Ray.h"
 #include "Scene.h"
 
+#define NB_RAY 16
+
 static RayTracer * instance = NULL;
 
 RayTracer * RayTracer::getInstance () {
@@ -107,11 +109,11 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 			occlusion=false;
 			Vec3Df lm;
 			Vec3Df lpos = cam.toWorld (light->getPos());
-			//float lrad= light->getRadius();
-			//Vec3Df lor= cam.toWorld (light->getOrientation());
-			//const double PI = 3.1415926535;
+			float lrad= light->getRadius();
+			Vec3Df lor= cam.toWorld (light->getOrientation());
+			const double PI = 3.1415926535;
 
-			/*for(int i=0;i<8;i++){
+			for(int i=0;i<NB_RAY;i++){
 
 				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
 				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
@@ -121,17 +123,17 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 				v0.normalize();
 				v1.normalize(); 
 
-				Vec3Df rand_lpos= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);*/
+				Vec3Df rand_lpos= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
 
 				//don't forget to change lpos to rand_lpos for an extended source of light
 
 				// Test Occlusion
 
-				oc_dir=lpos-intersectionPoint.getPos();	
+				oc_dir=rand_lpos-intersectionPoint.getPos();	
 				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
-				lm=lpos-intersectionPoint.getPos();
+				lm=rand_lpos-intersectionPoint.getPos();
 				lm.normalize();
 
 				
@@ -171,15 +173,15 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 				}
 
 				// Total color blend
-			//color[0] += ((intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]))/8;
-			//color[1] += ((intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]))/8;
-			//color[2] += ((intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]))/8;
+			color[0] += ((intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]))/NB_RAY;
+			color[1] += ((intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]))/NB_RAY;
+			color[2] += ((intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]))/NB_RAY;
 
-			color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
-			color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
-			color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
+			//color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
+			//color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
+			//color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
-			//}
+			}
 		}
 
 				// Debug total color

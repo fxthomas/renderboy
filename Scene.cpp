@@ -65,7 +65,7 @@ void Scene::buildDefaultScene (bool HD) {
     objects.push_back (ram);
 
 	//if you want to have a extended source of light, change the fourth argument in the following line
-    Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 0.0f, Vec3Df(-1.0f, -1.0f, -1.0f));
+    Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(-1.0f, -1.0f, -1.0f));
     lights.push_back (l);
 
 		for (vector<Object>::iterator it = objects.begin(); it != objects.end(); it++) it->computeKdTree();

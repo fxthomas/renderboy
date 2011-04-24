@@ -188,6 +188,17 @@ void Window::initControlWidget () {
 	connect (fuzzySlider, SIGNAL (valueChanged(int)), Scene::getInstance(), SLOT (setFuzziness(int)));
 	rayLayout->addWidget (fuzzySlider);
 
+	QLabel * radiusLabel = new QLabel ("Light Source Radius", rayGroupBox);
+	rayLayout->addWidget (radiusLabel);
+
+	QSlider * radiusSlider = new QSlider (Qt::Horizontal, rayGroupBox);
+	fuzzySlider->setTracking (false);
+	fuzzySlider->setMinimum (0); // Fuzziness = 10^(-3 + Value/8))
+	fuzzySlider->setMaximum (5);
+	fuzzySlider->setValue (6);
+	connect (radiusSlider, SIGNAL (valueChanged(int)), Scene::getInstance(), SLOT (setRadius(int)));
+	rayLayout->addWidget (radiusSlider);
+
 	QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
 	rayLayout->addWidget (rayButton);
 	connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
