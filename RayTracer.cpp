@@ -29,6 +29,123 @@ inline int clamp (float f, int inf, int sup) {
     return (v < inf ? inf : (v > sup ? sup : v));
 }
 
+Vec3Df RayTracer::getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat) {
+	Vec3Df diffuseSelf,specularSelf;
+	Vec3Df c = mat.getColor();
+	Vec3Df vv = eye - point;
+	Vec3Df lpos, lm;
+	vv.normalize();
+
+	for (vector<Light>::iterator light = Scene::getInstance()->getLights().begin(); light != Scene::getInstance()->getLights().end(); light++) {
+		lpos = cam.toWorld (light->getPos());
+		lm = lpos - point;
+		lm.normalize();
+
+		// Diffuse Light
+		float sc = Vec3D<float>::dotProduct(lm, normal);
+		diffuseSelf += light->getColor() * fabs (sc);
+
+		// Specular Light
+		sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
+		if (sc > 0.) {
+			sc = pow (sc, mat.getShininess() * 40.f);
+			specularSelf += light->getColor() * sc;
+		}
+	}
+
+	// Total color blend
+	c[0] = (mat.getDiffuse()*c[0]*diffuseSelf[0] + mat.getSpecular()*specularSelf[0]);
+	c[1] = (mat.getDiffuse()*c[1]*diffuseSelf[1] + mat.getSpecular()*specularSelf[1]);
+	c[2] = (mat.getDiffuse()*c[2]*diffuseSelf[2] + mat.getSpecular()*specularSelf[2]);
+	return c;
+}
+
+
+Vec3Df RayTracer::lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, bool debug) {
+	Vec3Df c = getColor (eye, point, normal, mat);
+
+	// Debug total color
+	if (debug) {
+		cout << "     [ Color blend ]" << endl;
+		cout << "       Computed Color: " << c << endl;
+		cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
+	}
+
+	return c;
+}
+
+Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, bool debug, int d) {
+	// If no refraction, or depth too big, return classic light model
+	if (d >= depth || mat.getIOR() == 1.f) return lightModel (eye, point, normal, mat, debug);
+	if (debug) cout << " (I) Bounce depth " << d << endl;
+
+	// Prepare color variables
+	Vec3Df dirRefr, dirRefl;
+	Vec3Df colRefr, colRefl, colSelf;
+	Ray ray;
+	Vertex intersectionPoint;
+	const Object* intersectionObject;
+	unsigned int triangle;
+	float iu, iv;
+	bool hasIntersection;
+
+	// Get color from self lighting
+	colSelf   = lightModel (eye, point, normal, mat, debug);
+
+	// Compute refraction/reflection vector
+	bool refract = dir.bounce (mat.getIOR(), normal, dirRefr, dirRefl);
+
+	// Compute refracted ray
+	if (refract) {
+		ray = Ray (eye, dirRefr);
+		intersectionObject = NULL;
+		hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, iu, iv, triangle);
+
+		if (!hasIntersection) {
+			//return lightModel (eye, point, normal, mat, debug);
+			colRefr = backgroundColor;
+		} else {
+			// Get color from bouncing, and compute next normal
+			Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
+			Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
+			Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
+			Vec3Df nor = (1-iu-iv)*p0 + iv*p1 + iu*p2;
+			nor.normalize();
+			colRefr = lightBounce (point, dirRefr, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), debug, d+1);
+		}
+	}
+
+	// Compute reflected ray
+	ray = Ray (eye, dirRefl);
+	intersectionObject = NULL;
+	hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, iu, iv, triangle);
+
+	if (!hasIntersection) {
+		//return lightModel (eye, point, normal, mat, debug);
+		colRefl = backgroundColor;
+	} else {
+		// Get color from bouncing, and compute next normal
+		Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
+		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
+		Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
+		Vec3Df nor = (1-iu-iv)*p0 + iv*p1 + iu*p2;
+		nor.normalize();
+		colRefl = lightBounce (point, dirRefl, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), debug, d+1);
+	}
+
+	// Total color blend
+	Vec3Df c = colRefl*(1.f-mat.getRefract()) + colRefr*mat.getRefract() + colSelf*(1.f-mat.getRefract());
+
+	if (debug) {
+		cout << "     [ Total color blend ]" << endl;
+		cout << "       Computed Color: " << c << endl;
+		cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
+	}
+
+	c.scale (1.f);
+	return c;
+}
+
 /**
  * Raytrace a single point
  */
@@ -50,6 +167,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 	Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
 	Vec3Df step = stepX + stepY;
 	Vec3Df dir = direction + step;
+	dir.normalize();
 	if (debug) {
 		cout << "     [ Basic Information ]" << endl;
 		cout << "       Ray Direction: " << dir << endl << endl;
@@ -82,59 +200,14 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i,	unsigned int j, bool debug, Bo
 			cout << "       Material: " << intersectionObject->getMaterial() << endl << endl;
 		}
 
-		Vec3Df c = intersectionObject->getMaterial().getColor();
-		Vec3Df diffuse;
-		Vec3Df specular;
-
 		Vec3Df p0 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (0)].getNormal();
 		Vec3Df p1 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (1)].getNormal();
 		Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
 		Vec3Df normal = (1-iu-iv)*p0 + iv*p1 + iu*p2;
 		normal.normalize();
-		Vec3Df vv = camPos - intersectionPoint.getPos();
-		vv.normalize();
 
-		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
-			Vec3Df lpos = cam.toWorld (light->getPos());
-			Vec3Df lm = lpos - intersectionPoint.getPos();
-			lm.normalize();
+		return lightBounce (camPos, dir, intersectionPoint.getPos(), normal, intersectionObject->getMaterial(), debug, 0);
 
-			// Diffuse Light
-			float sc = Vec3D<float>::dotProduct(lm, normal);
-			if (sc > 0.) {
-				diffuse = light->getColor() * sc;
-			}
-
-			// Specular Light
-			sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
-			if (sc > 0.) {
-				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 40.f);
-				specular = light->getColor() * sc;
-			}
-
-			// Raytracing debug
-			if (debug) {
-				cout << "     [ Light ]" << endl;
-				cout << "       Normal: " << normal << endl;
-				cout << "       Diffuse Factor: " << sc << endl;
-				cout << "       Diffuse Color: " << diffuse << endl;
-				cout << "       Specular Factor: " << sc << endl;
-				cout << "       Specular Color: " << specular << endl << endl;
-			}
-		}
-		// Total color blend
-		c[0] = (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
-		c[1] = (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
-		c[2] = (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
-
-		// Debug total color
-		if (debug) {
-			cout << "     [ Color blend ]" << endl;
-			cout << "       Computed Color: " << c << endl;
-			cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
-		}
-
-		return c;
 	} else {
 		if (debug) cout << "     [ No intersection ]" << endl << endl;
 		return backgroundColor;
@@ -163,7 +236,6 @@ QImage RayTracer::render () {
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
 		emit progress (i);
 
-//pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			// Raytrace
 			Vec3Df c = raytraceSingle (i, j, false, b);
@@ -175,7 +247,6 @@ QImage RayTracer::render () {
 			// Computed lighting
 			image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
 		}
-
 	}
 
 	// Return image

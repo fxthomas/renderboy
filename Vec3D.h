@@ -243,6 +243,19 @@ public:
         return (u * (1.0f - alpha) + v * alpha);
     }
 
+		inline Vec3D scale (T fm) {
+			T max = p[0];
+			if (p[1] > max) max = p[1];
+			if (p[2] > max) max = p[2];
+
+			if (max > 1.f) {
+				p[0] *= fm/max;
+				p[1] *= fm/max;
+				p[2] *= fm/max;
+			}
+			return p;
+		}
+
     // cartesion to polar coordinates
     // result:
     // [0] = length
@@ -291,6 +304,26 @@ public:
     }
 
 		inline const T* getData() const { return p; };
+
+		/**
+		 * Computes the refracted and reflected vector, given IOR (Indice Of Refraction) and the normal vector.
+		 * Returns false if no refraction occurs, else true.
+		 *
+		 * @see http://en.wikipedia.org/wiki/Snell's_law
+		 */
+		inline bool bounce (float ior, const Vec3D & normal, Vec3D & refracted, Vec3D & reflected) const {
+			float cost1 = dotProduct (normal, *this);
+			float n1 = (cost1 < 0.f?1.f:ior);
+			float n2 = (cost1 < 0.f?ior:1.f);
+			float rr = cost1*cost1 + (n2/n1)*(n2/n1) - 1.f;
+			reflected = (*this - (2*cost1)*normal);
+			if (rr <= 0.f) refracted = Vec3D<float> (0.f, 0.f, 0.f);
+			else refracted = (n1/n2) * (*this + (sqrtf(rr) - fabs(cost1))*normal);
+
+			refracted.normalize();
+			reflected.normalize();
+			return (rr > 0.f);
+		}
 
 protected:
     T p[3];

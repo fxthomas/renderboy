@@ -44,6 +44,7 @@ public:
 private:
     Vec3Df origin;
     Vec3Df direction;
+		const static float EPSILON = 1e-2;
 };
 
 

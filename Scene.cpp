@@ -56,10 +56,13 @@ void Scene::buildDefaultScene (bool HD) {
     objects.push_back (ground);
     Mesh ramMesh;
     if (HD)
-        ramMesh.loadOFF ("models/ram_HD.off");
+        //ramMesh.loadOFF ("models/ram_HD.off");
+        ramMesh.loadOFF ("models/wine_crate.off");
     else
-        ramMesh.loadOFF ("models/ram.off");
-    Material ramMat (1.f, 1.f, 1.f, Vec3Df (1.f, .6f, .2f));
+        //ramMesh.loadOFF ("models/ram.off");
+        ramMesh.loadOFF ("models/wine_crate.off");
+    //Material ramMat (1.f, 1.f, 1.f, Vec3Df (1.f, .6f, .2f), 2.f, 0.8f);
+    Material ramMat (1.f, 1.f, 1.f, Vec3Df (1.f, .0f, .2f), 1.1f, 0.90f);
     Object ram (ramMesh, ramMat);    
 		//cout << " (I) Ram address: " << &ram << endl;
     objects.push_back (ram);
