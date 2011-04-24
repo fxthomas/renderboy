@@ -216,33 +216,23 @@ bool Ray::intersect (const Scene & scene, Vertex & intersectionPoint, const Obje
 	ir = INFINITY;
 	bool hasIntersection = false;
 
-	float tmpIr = 0.f, tmpIr_prec=0.f, tmpIu, tmpIv;
+	float tmpIr = 0.f, tmpIu, tmpIv;
 	bool tmpIntersection = false;
 	Vertex tmpPoint;
 	unsigned int tritri;
 	for (vector<Object>::const_iterator obj = scene.getObjects().begin(); obj != scene.getObjects().end(); obj++) {
 		tmpIntersection = intersect (*obj, tmpPoint, tmpIr, tmpIu, tmpIv, tritri);
-		if (tmpIntersection && tmpIr<0.001) {
-
-			Ray ray2(tmpPoint.getPos()+direction*0.00001, direction);
-			//cout<<"direction du rayon :"<<direction<<endl;
-			tmpIr_prec=tmpIr;
-			tmpIr=0.f;
-			return ray2.intersect(*obj, tmpPoint, tmpIr, tmpIu, tmpIv, tritri);
-
-			
-		}
-		else
 			if (tmpIntersection){
 			{
 				hasIntersection = true;
 				if (tmpIr < ir) {
 					triangle = tritri;
 					*intersectionObject = &(*obj);
-					ir =tmpIr_prec + tmpIr;
+					ir = tmpIr;
 					iu = tmpIu;
 					iv = tmpIv;
 					intersectionPoint = tmpPoint;
+					
 				} //else cout << tmpIr << endl;
 			}
 		}

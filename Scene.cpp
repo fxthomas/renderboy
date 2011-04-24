@@ -63,7 +63,9 @@ void Scene::buildDefaultScene (bool HD) {
     Object ram (ramMesh, ramMat);    
 		//cout << " (I) Ram address: " << &ram << endl;
     objects.push_back (ram);
-    Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+
+	//if you want to have a extended source of light, change the fourth argument in the following line
+    Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 0.0f, Vec3Df(-1.0f, -1.0f, -1.0f));
     lights.push_back (l);
 
 		for (vector<Object>::iterator it = objects.begin(); it != objects.end(); it++) it->computeKdTree();

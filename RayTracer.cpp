@@ -105,64 +105,94 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
 			occlusion=false;
+			Vec3Df lm;
 			Vec3Df lpos = cam.toWorld (light->getPos());
-			Vec3Df lm = lpos - intersectionPoint.getPos();
-			lm.normalize();
+			//float lrad= light->getRadius();
+			//Vec3Df lor= cam.toWorld (light->getOrientation());
+			//const double PI = 3.1415926535;
 
-			// Test Occlusion
+			/*for(int i=0;i<8;i++){
 
-			oc_dir=lpos-intersectionPoint.getPos();	
-			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
-			occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
+				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
+				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
 
-			//cout<<"distance entre le point et la caméra: "<<oc_dir.getLength()<<endl;
+				Vec3Df v0 (0.0f, -lor[2], lor[1]);
+				Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
+				v0.normalize();
+				v1.normalize(); 
+
+				Vec3Df rand_lpos= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);*/
+
+				//don't forget to change lpos to rand_lpos for an extended source of light
+
+				// Test Occlusion
+
+				oc_dir=lpos-intersectionPoint.getPos();	
+				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
+				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
+
+				lm=lpos-intersectionPoint.getPos();
+				lm.normalize();
+
 				
-			if (occlusion) {
-				//cout<<"Il y a occlusion ici: " <<intersectionPoint.getPos()<<endl;
-				diffuse= Vec3Df(0.f, 0.f, 0.f);
-				specular=Vec3Df(0.f, 0.f, 0.f);
+				if (occlusion && (ir < 0.000001)) {
+					Ray oc_ray2(intersectionPoint.getPos()+ oc_dir*(ir + 0.000001), oc_dir);
+					occlusion = (oc_ray2.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
+				}
+ 				
+				if (occlusion) {
+					diffuse= Vec3Df(0.f, 0.f, 0.f);
+					specular=Vec3Df(0.f, 0.f, 0.f);
 				continue;
-			}
+				}
 
-			// Diffuse Light
-			float sc = Vec3D<float>::dotProduct(lm, normal);
-			if (sc > 0.) {
-				diffuse = light->getColor() * sc;
-			}
+				// Diffuse Light
+				float sc = Vec3D<float>::dotProduct(lm, normal);
+				if (sc > 0.) {
+					diffuse = light->getColor() * sc;
+				}
 
-			// Specular Light
-			sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
-			if (sc > 0.) {
-				sc = pow (sc, intersectionObject->getMaterial().getShininess() * 40.f);
-				specular = light->getColor() * sc;
-			}
+				// Specular Light
+				sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
+				if (sc > 0.) {
+					sc = pow (sc, intersectionObject->getMaterial().getShininess() * 40.f);
+					specular = light->getColor() * sc;
+				}
 
-			// Raytracing debug
+
+				// Raytracing debug
+				if (debug) {
+					cout << "     [ Light ]" << endl;
+					cout << "       Normal: " << normal << endl;
+					cout << "       Diffuse Factor: " << sc << endl;
+					cout << "       Diffuse Color: " << diffuse << endl;
+					cout << "       Specular Factor: " << sc << endl;
+					cout << "       Specular Color: " << specular << endl << endl;
+				}
+
+				// Total color blend
+			//color[0] += ((intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]))/8;
+			//color[1] += ((intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]))/8;
+			//color[2] += ((intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]))/8;
+
+			color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
+			color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
+			color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
+
+			//}
+		}
+
+				// Debug total color
 			if (debug) {
-				cout << "     [ Light ]" << endl;
-				cout << "       Normal: " << normal << endl;
-				cout << "       Diffuse Factor: " << sc << endl;
-				cout << "       Diffuse Color: " << diffuse << endl;
-				cout << "       Specular Factor: " << sc << endl;
-				cout << "       Specular Color: " << specular << endl << endl;
+				cout << "     [ Color blend ]" << endl;
+				cout << "       Computed Color: " << c << endl;
+				cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
 			}
-		}
-		// Total color blend
-		color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
-		color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
-		color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
-		// Debug total color
-		if (debug) {
-			cout << "     [ Color blend ]" << endl;
-			cout << "       Computed Color: " << c << endl;
-			cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
-		}
-
-		return color;
-	} else {
-		if (debug) cout << "     [ No intersection ]" << endl << endl;
-		return backgroundColor;
+			return color;
+		} else {
+			if (debug) cout << "     [ No intersection ]" << endl << endl;
+			return backgroundColor;
 	}
 }
 
