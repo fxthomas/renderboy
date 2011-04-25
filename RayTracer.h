@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QTime>
 
+#include "PointCloud.hpp"
 #include "Camera.hpp"
 #include "Material.h"
 #include "Vec3D.h"
@@ -33,9 +34,9 @@ class RayTracer : public QThread {
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
 		Vec3Df getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat);
-		Vec3Df lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, bool debug);
-		Vec3Df lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, bool debug, int d);
-    Vec3Df raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb);
+		Vec3Df lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug);
+		Vec3Df lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, int d);
+    Vec3Df raytraceSingle (const PointCloud & pc, unsigned int i, unsigned int j, bool debug, BoundingBox & bb);
     QImage render ();
     BoundingBox debug (unsigned int i, unsigned int j);
 
