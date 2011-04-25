@@ -59,6 +59,17 @@ class Scene : public QObject {
 			}
 			cout << endl;
 		}
+
+		void setRadius (int r) {
+			float rr = (float) r/20;
+			cout << " (I) Setting Radius to " << rr << endl;
+			for (vector<Light>::iterator light = getLights().begin(); light != getLights().end(); light++) {
+				cout<<"Changing the radius of the light source...";				
+				light->setRadius(rr);
+				cout<<"done"<<endl;
+			}
+			cout << endl;
+		}
 };
 
 
