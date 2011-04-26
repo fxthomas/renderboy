@@ -9,7 +9,7 @@
 #include "Ray.h"
 #include "Scene.h"
 
-#define NB_RAY 64
+#define NB_RAY 16
 
 static RayTracer * instance = NULL;
 
@@ -105,36 +105,46 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 		Vec3Df vv = camPos - intersectionPoint.getPos();
 		vv.normalize();
 
+		const float PI = 3.1415926535;
+
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
 			occlusion=false;
 			Vec3Df lm;
 			Vec3Df lpos = cam.toWorld (light->getPos());
 			float lrad= light->getRadius();
 			Vec3Df lor= cam.toWorld (light->getOrientation());
-			const double PI = 3.1415926535;
+			unsigned int nb_iter = NB_RAY;
+
+			if (lrad==0) nb_iter=1;
+
+			vector<Vec3Df> rand_lpoints(nb_iter, Vec3Df(0.f,0.f,0.f));
+
+			for(unsigned int j=0;j<nb_iter;j++){
+	
+				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
+				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
+				
+				Vec3Df v0 (0.0f, -lor[2], lor[1]);
+				Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
+				v0.normalize();
+				v1.normalize(); 
+
+				rand_lpoints[j]= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
+			} 
+			
 
 			//in the following version, we compute the value of diffuse and specular light for each random ray. 
 			//An other way is to use the random rays in order to compute a value of visibility, and then make the "hard shadow rendering" using this
 			//coefficient
 
 
-			/*for(int i=0;i<NB_RAY;i++){
-
-				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
-				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
-
-				Vec3Df v0 (0.0f, -lor[2], lor[1]);
-				Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
-				v0.normalize();
-				v1.normalize(); 
-
-				Vec3Df rand_lpos= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
+			/*for(unsigned int i=0;i<nb_iter;i++){
 
 				//don't forget to change lpos to rand_lpos for an extended source of light
 
 				// Test Occlusion
 
-				oc_dir=rand_lpos-intersectionPoint.getPos();	
+				oc_dir=rand_lpoints[i]-intersectionPoint.getPos();	
 				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
@@ -178,38 +188,30 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 				}
 
 				// Total color blend
-			color[0] += ((intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]))/NB_RAY;
-			color[1] += ((intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]))/NB_RAY;
-			color[2] += ((intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]))/NB_RAY;
+			color[0] += ((intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]))/nb_iter;
+			color[1] += ((intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]))/nb_iter;
+			color[2] += ((intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]))/nb_iter;
 
 			//color[0] += (intersectionObject->getMaterial().getDiffuse()*c[0]*diffuse[0] + intersectionObject->getMaterial().getSpecular()*specular[0]);
 			//color[1] += (intersectionObject->getMaterial().getDiffuse()*c[1]*diffuse[1] + intersectionObject->getMaterial().getSpecular()*specular[1]);
 			//color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
 			}
-		} */
+
+*/
+		
 
 		//Here is the other way ^^
 
 			double visibility =1.0f;
 
-			for(int i=0;i<NB_RAY;i++){
-
-				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
-				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
-				
-				Vec3Df v0 (0.0f, -lor[2], lor[1]);
-				Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
-				v0.normalize();
-				v1.normalize(); 
-
-				Vec3Df rand_lpos= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
+			for(unsigned int i=0;i<nb_iter;i++){
 
 				//don't forget to change lpos to rand_lpos for an extended source of light
 
 				// Test Occlusion
 
-				oc_dir=rand_lpos-intersectionPoint.getPos();	
+				oc_dir=rand_lpoints[i]-intersectionPoint.getPos();	
 				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
@@ -223,7 +225,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 				}
 	 				
 				if (occlusion) {
-					visibility-= 1.0f/NB_RAY;
+					visibility-= 1.0f/nb_iter;
 				continue;
 				}
 

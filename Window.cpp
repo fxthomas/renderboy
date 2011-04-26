@@ -192,10 +192,10 @@ void Window::initControlWidget () {
 	rayLayout->addWidget (radiusLabel);
 
 	QSlider * radiusSlider = new QSlider (Qt::Horizontal, rayGroupBox);
-	fuzzySlider->setTracking (false);
-	fuzzySlider->setMinimum (0); // Fuzziness = 10^(-3 + Value/8))
-	fuzzySlider->setMaximum (5);
-	fuzzySlider->setValue (6);
+	radiusSlider->setTracking (false);
+	radiusSlider->setMinimum (0); // Fuzziness = 10^(-3 + Value/8))
+	radiusSlider->setMaximum (5);
+	radiusSlider->setValue (1);
 	connect (radiusSlider, SIGNAL (valueChanged(int)), Scene::getInstance(), SLOT (setRadius(int)));
 	rayLayout->addWidget (radiusSlider);
 
