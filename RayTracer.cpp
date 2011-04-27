@@ -34,7 +34,8 @@ inline int clamp (float f, int inf, int sup) {
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb) {
+Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter ,vector <vector<Vec3Df> > rand_lpoints) {
+	
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -105,33 +106,12 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 		Vec3Df vv = camPos - intersectionPoint.getPos();
 		vv.normalize();
 
-		const float PI = 3.1415926535;
-
 		for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
 			occlusion=false;
 			Vec3Df lm;
-			Vec3Df lpos = cam.toWorld (light->getPos());
-			float lrad= light->getRadius();
-			Vec3Df lor= cam.toWorld (light->getOrientation());
-			unsigned int nb_iter = NB_RAY;
 
-			if (lrad==0) nb_iter=1;
+			int j=0;
 
-			vector<Vec3Df> rand_lpoints(nb_iter, Vec3Df(0.f,0.f,0.f));
-
-			for(unsigned int j=0;j<nb_iter;j++){
-	
-				double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
-				double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
-				
-				Vec3Df v0 (0.0f, -lor[2], lor[1]);
-				Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
-				v0.normalize();
-				v1.normalize(); 
-
-				rand_lpoints[j]= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
-			} 
-			
 
 			//in the following version, we compute the value of diffuse and specular light for each random ray. 
 			//An other way is to use the random rays in order to compute a value of visibility, and then make the "hard shadow rendering" using this
@@ -144,7 +124,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 
 				// Test Occlusion
 
-				oc_dir=rand_lpoints[i]-intersectionPoint.getPos();	
+				oc_dir=rand_lpoints[i][j]-intersectionPoint.getPos();	
 				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
@@ -197,8 +177,8 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 			//color[2] += (intersectionObject->getMaterial().getDiffuse()*c[2]*diffuse[2] + intersectionObject->getMaterial().getSpecular()*specular[2]);
 
 			}
-
 */
+
 		
 
 		//Here is the other way ^^
@@ -211,7 +191,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 
 				// Test Occlusion
 
-				oc_dir=rand_lpoints[i]-intersectionPoint.getPos();	
+				oc_dir=rand_lpoints[i][j]-intersectionPoint.getPos();	
 				Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 				occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
 
@@ -231,7 +211,7 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 
 			}
 
-			oc_dir=lpos-intersectionPoint.getPos();	
+			oc_dir=rand_lpoints[0][j]-intersectionPoint.getPos();	
 			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
 
 			lm = oc_dir;
@@ -273,6 +253,8 @@ Vec3Df RayTracer::raytraceSingle (unsigned int i, unsigned int j, bool debug, Bo
 				cout << "       Computed Color: " << c << endl;
 				cout << "       Computed Clamped Color: (" << clamp (c[0]*255.,0,255) << ", " << clamp (c[1]*255.,0,255) << ", " << clamp (c[2]*255.,0,255) << ")" << endl << endl;
 			}
+			j++;
+
 		}
 
 		return color;
@@ -300,14 +282,49 @@ QImage RayTracer::render () {
 
 	// For each camera pixel, cast a ray and compute its reflecting color
 	BoundingBox b;
-#pragma omp parallel for default(shared) schedule(dynamic)
+
+	
+	Scene * scene = Scene::getInstance ();
+
+	unsigned int nb_iter = NB_RAY;
+	vector <vector<Vec3Df> > rand_lpoints(nb_iter, vector<Vec3Df>(scene->getLights().size(), Vec3Df(0.f,0.f,0.f)));
+
+	for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
+		
+		int num_light=0;
+		Vec3Df lpos = cam.toWorld (light->getPos());
+		float lrad= light->getRadius();
+		Vec3Df lor= cam.toWorld (light->getOrientation());
+
+		const float PI = 3.1415926535;
+
+		if (lrad==0) nb_iter=1;
+
+		rand_lpoints[0][num_light]=lpos;
+
+		for(unsigned int j=1;j<nb_iter;j++){
+			double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
+			double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
+				
+			Vec3Df v0 (0.0f, -lor[2], lor[1]);
+			Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
+			v0.normalize();
+			v1.normalize(); 
+
+			rand_lpoints[j][num_light]= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
+		}
+		num_light++;
+	} 
+
+	#pragma omp parallel for default(shared) schedule(dynamic)
+
 	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
 		emit progress (i);
 
 //pragma omp parallel for schedule(static) default(shared)
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			// Raytrace
-			Vec3Df c = raytraceSingle (i, j, false, b);
+			Vec3Df c = raytraceSingle (i, j, false, b, nb_iter, rand_lpoints);
 			
 			// Depth map
 			//float f = (c - cam.position()).getSquaredLength();
@@ -326,6 +343,44 @@ QImage RayTracer::render () {
 
 BoundingBox RayTracer::debug (unsigned int i, unsigned int j) {
 	BoundingBox bb;
-	raytraceSingle (i, j, true, bb);
+
+	Scene * scene = Scene::getInstance ();
+
+	unsigned int nb_iter = NB_RAY;
+	vector <vector<Vec3Df> > rand_lpoints(nb_iter, vector<Vec3Df>(scene->getLights().size(), Vec3Df(0.f,0.f,0.f)));
+
+	for (vector<Light>::iterator light = scene->getLights().begin(); light != scene->getLights().end(); light++) {
+		
+		int num_light=0;
+		Vec3Df lpos = cam.toWorld (light->getPos());
+		float lrad= light->getRadius();
+		Vec3Df lor= cam.toWorld (light->getOrientation());
+		
+		
+
+		const float PI = 3.1415926535;
+
+		if (lrad==0) nb_iter=1;
+
+		for(unsigned int k=0;k<scene->getLights().size();k++){
+			rand_lpoints[0][k]=lpos;
+		}
+
+		for(unsigned int j=1;j<nb_iter;j++){
+	
+			double rand_rad =((double)rand() / ((double)RAND_MAX + 1) * lrad);
+			double rand_ang =((double)rand() / ((double)RAND_MAX + 1) * 2 * PI);
+				
+			Vec3Df v0 (0.0f, -lor[2], lor[1]);
+			Vec3Df v1 (lor[1]*lor[1]+lor[2]*lor[2], -lor[0]*lor[1], -lor[0]*lor[2]);
+			v0.normalize();
+			v1.normalize(); 
+
+			rand_lpoints[j][num_light]= lpos+ rand_rad* (cos(rand_ang)*v0+sin(rand_ang)*v1);
+		}
+		num_light++;
+	} 
+
+	raytraceSingle (i, j, true, bb, nb_iter, rand_lpoints);
 	return bb;
 }

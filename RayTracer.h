@@ -31,7 +31,7 @@ class RayTracer : public QThread {
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
-    Vec3Df raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb);
+    Vec3Df raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, vector <vector<Vec3Df> > rand_lpoints);
     QImage render ();
     BoundingBox debug (unsigned int i, unsigned int j);
 
