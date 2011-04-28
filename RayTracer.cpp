@@ -31,41 +31,76 @@ inline int clamp (float f, int inf, int sup) {
     return (v < inf ? inf : (v > sup ? sup : v));
 }
 
-Vec3Df RayTracer::getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat) {
+Vec3Df RayTracer::getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
 	Vec3Df diffuseSelf,specularSelf;
 	Vec3Df c = mat.getColor();
 	Vec3Df vv = eye - point;
 	Vec3Df lpos, lm;
+	Light light;
 	vv.normalize();
 
-	for (vector<Light>::iterator light = Scene::getInstance()->getLights().begin(); light != Scene::getInstance()->getLights().end(); light++) {
-		lpos = cam.toWorld (light->getPos());
+	// Occlusion (shadows)
+	bool occlusion = false;
+	Vec3Df oc_dir;
+	Vertex tmp;
+	float ir, iu_tmp, iv_tmp;
+	unsigned int tri_tmp;
+	double visibility =1.0f;
+	Vertex intersectionPoint;
+	const Object* intersectionObject;
+
+	for (unsigned int j = 0; j < Scene::getInstance()->getLights().size(); j++) {
+		light = Scene::getInstance()->getLights()[j];
+		lpos = cam.toWorld (light.getPos());
 		//lpos = light->getPos();
 		lm = lpos - point;
 		lm.normalize();
 
+		occlusion = false;
+		for(unsigned int i=0;i<nb_iter;i++) {
+			//don't forget to change lpos to rand_lpos for an extended source of light
+			// Test Occlusion
+			oc_dir=rand_lpoints[i][j]-intersectionPoint.getPos();	
+			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
+			occlusion = (oc_ray.intersect(*Scene::getInstance(), tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
+
+			if (occlusion && (ir < 0.000001)) {
+				Ray oc_ray2(intersectionPoint.getPos()+ oc_dir*(ir + 0.000001), oc_dir);
+				occlusion = (oc_ray2.intersect(*Scene::getInstance(), tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
+			}
+
+			if (occlusion) {
+				visibility-= 1.0f/nb_iter;
+				continue;
+			}
+		}
+		cout << "Visibility: " << visibility << endl;
+
+		oc_dir=rand_lpoints[0][j]-intersectionPoint.getPos();	
+		Ray oc_ray (intersectionPoint.getPos(), oc_dir);
+
 		// Diffuse Light
 		float sc = Vec3D<float>::dotProduct(lm, normal);
-		diffuseSelf += light->getColor() * fabs (sc);
+		diffuseSelf += light.getColor() * fabs (sc);
 
 		// Specular Light
 		sc = Vec3D<float>::dotProduct(normal*sc*2.f-lm, vv);
 		if (sc > 0.) {
 			sc = pow (sc, mat.getShininess() * 40.f);
-			specularSelf += light->getColor() * sc;
+			specularSelf += light.getColor() * sc;
 		}
 	}
 
 	// Total color blend
-	c[0] = (mat.getDiffuse()*c[0]*diffuseSelf[0] + mat.getSpecular()*specularSelf[0]);
-	c[1] = (mat.getDiffuse()*c[1]*diffuseSelf[1] + mat.getSpecular()*specularSelf[1]);
-	c[2] = (mat.getDiffuse()*c[2]*diffuseSelf[2] + mat.getSpecular()*specularSelf[2]);
+	c[0] = (mat.getDiffuse()*c[0]*diffuseSelf[0] + mat.getSpecular()*specularSelf[0])*visibility;
+	c[1] = (mat.getDiffuse()*c[1]*diffuseSelf[1] + mat.getSpecular()*specularSelf[1])*visibility;
+	c[2] = (mat.getDiffuse()*c[2]*diffuseSelf[2] + mat.getSpecular()*specularSelf[2])*visibility;
 	return c;
 }
 
 
-Vec3Df RayTracer::lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug) {
-	Vec3Df cdirect = getColor (eye, point, normal, mat);
+Vec3Df RayTracer::lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
+	Vec3Df cdirect = getColor (eye, point, normal, mat, nb_iter, rand_lpoints);
 	Vec3Df cindirect;
 	Vec3Df diffuseSelf,specularSelf;
 	Vec3Df c = mat.getColor();
@@ -111,9 +146,9 @@ Vec3Df RayTracer::lightModel (const Vec3Df & eye, const Vec3Df & point, const Ve
 	return c;
 }
 
-Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, int d) {
+Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, int d, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
 	// If no refraction, or depth too big, return classic light model
-	if (d >= depth) return lightModel (eye, point, normal, mat, pc, debug);
+	if (d >= depth) return lightModel (eye, point, normal, mat, pc, debug, nb_iter, rand_lpoints);
 	if (debug) cout << " (I) Bounce depth " << d << endl;
 	if (debug) cout << " (I) For point " << point << endl;
 
@@ -124,11 +159,11 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 	Vertex intersectionPoint;
 	const Object* intersectionObject;
 	unsigned int triangle;
-	float iu, iv;
+	float ir, iu, iv;
 	bool hasIntersection;
 
 	// Get color from self lighting
-	colSelf   = lightModel (eye, point, normal, mat, pc, debug);
+	colSelf   = lightModel (eye, point, normal, mat, pc, debug, nb_iter, rand_lpoints);
 
 	// Compute refraction/reflection vector
 	bool refract = dir.bounce (mat.getIOR(), normal, dirRefr, dirRefl);
@@ -137,7 +172,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 	if (refract && mat.getIOR() != 1.f && mat.getRefract() > 0.f) {
 		ray = Ray (point, dirRefr);
 		intersectionObject = NULL;
-		hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, iu, iv, triangle);
+		hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, ir, iu, iv, triangle);
 
 		if (!hasIntersection) {
 			colRefr = backgroundColor;
@@ -148,7 +183,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 			Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
 			Vec3Df nor = (1-iu-iv)*p0 + iv*p1 + iu*p2;
 			nor.normalize();
-			colRefr = lightBounce (point, dirRefr, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), pc, debug, d+1);
+			colRefr = lightBounce (point, dirRefr, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), pc, debug, d+1, nb_iter, rand_lpoints);
 		}
 	}
 
@@ -156,7 +191,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 	if (mat.getReflect() > 0.f) {
 		ray = Ray (point, dirRefl);
 		intersectionObject = NULL;
-		hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, iu, iv, triangle);
+		hasIntersection = ray.intersect (*Scene::getInstance(), intersectionPoint, &intersectionObject, ir, iu, iv, triangle);
 
 		if (!hasIntersection) {
 			colRefl = backgroundColor;
@@ -167,7 +202,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 			Vec3Df p2 = intersectionObject->getMesh().getVertices()[intersectionObject->getMesh().getTriangles()[triangle].getVertex (2)].getNormal();
 			Vec3Df nor = (1-iu-iv)*p0 + iv*p1 + iu*p2;
 			nor.normalize();
-			colRefl = lightBounce (point, dirRefl, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), pc, debug, d+1);
+			colRefl = lightBounce (point, dirRefl, intersectionPoint.getPos(), nor, intersectionObject->getMaterial(), pc, debug, d+1, nb_iter, rand_lpoints);
 		}
 	}
 
@@ -187,7 +222,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (const PointCloud & pc, unsigned int i,	unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, vector <vector<Vec3Df> > rand_lpoints) {
+Vec3Df RayTracer::raytraceSingle (const PointCloud & pc, unsigned int i,	unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -244,44 +279,7 @@ Vec3Df RayTracer::raytraceSingle (const PointCloud & pc, unsigned int i,	unsigne
 		Vec3Df normal = (1-iu-iv)*p0 + iv*p1 + iu*p2;
 		normal.normalize();
 
-		Vec3Df color = lightBounce (camPos, dir, intersectionPoint.getPos(), normal, intersectionObject->getMaterial(), pc, debug, 0);
-
-		// Occlusion (shadows)
-		bool occlusion= false;
-		Vec3Df oc_dir;
-		Vertex tmp;
-		float ir, iu_tmp, iv_tmp;
-		unsigned int tri_tmp;
-		double visibility =1.0f;
-
-		for(unsigned int i=0;i<nb_iter;i++) {
-			//don't forget to change lpos to rand_lpos for an extended source of light
-
-			// Test Occlusion
-
-			oc_dir=rand_lpoints[i][j]-intersectionPoint.getPos();	
-			Ray oc_ray (intersectionPoint.getPos(), oc_dir);
-			occlusion = (oc_ray.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
-
-			lm = oc_dir;
-			lm.normalize();
-
-			if (occlusion && (ir < 0.000001)) {
-				Ray oc_ray2(intersectionPoint.getPos()+ oc_dir*(ir + 0.000001), oc_dir);
-				occlusion = (oc_ray2.intersect(*scene, tmp, &intersectionObject, ir, iu_tmp, iv_tmp, tri_tmp)) && (ir<oc_dir.getLength());
-			}
-
-			if (occlusion) {
-				visibility-= 1.0f/nb_iter;
-				continue;
-			}
-		}
-
-		oc_dir=rand_lpoints[0][j]-intersectionPoint.getPos();	
-		Ray oc_ray (intersectionPoint.getPos(), oc_dir);
-
-		return color*visibility;
-
+		return lightBounce (camPos, dir, intersectionPoint.getPos(), normal, intersectionObject->getMaterial(), pc, debug, 0, nb_iter, rand_lpoints);
 	} else {
 		if (debug) cout << "     [ No intersection ]" << endl << endl;
 		return backgroundColor;
@@ -351,7 +349,7 @@ QImage RayTracer::render () {
 
 		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
 			// Raytrace
-			Vec3Df c = raytraceSingle (pc, i, j, false, b, nb_iter, rand_lpoints);
+			Vec3Df c = raytraceSingle (/*pc*/PointCloud(), i, j, false, b, nb_iter, rand_lpoints);
 			
 			// Depth map
 			//float f = (c - cam.position()).getSquaredLength();
