@@ -178,7 +178,7 @@ bool Ray::intersect (const Vertex & v0, const Vertex & v1, const Vertex & v2, Ve
 	ir = -Vec3Df::dotProduct (nn, otr)/c;
 
 	// We return the intersection point
-	bool hasIntersection = (0 <= iu && iu <= 1 && 0 <= iv && iv <= 1 && ir >= 0 && iu + iv <= 1);
+	bool hasIntersection = (0 <= iu && iu <= 1 && 0 <= iv && iv <= 1 && ir >= EPSILON && iu + iv <= 1);
 	if (hasIntersection) {
 		nn.normalize();
 		intersectionPoint = Vertex (origin + ir*direction, v0.getNormal());

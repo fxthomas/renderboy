@@ -17,7 +17,9 @@ HEADERS = Window.h \
           Ray.h \
           Camera.hpp \
 					QClickableLabel.hpp \
-					KDTreeNode.hpp
+					KDTreeNode.hpp \
+					Surfel.hpp \
+					PointCloud.hpp
 
 SOURCES = Window.cpp \
           GLViewer.cpp \
@@ -35,7 +37,8 @@ SOURCES = Window.cpp \
 					QClickableLabel.cpp \
           Camera.cpp \
           Main.cpp \
-					KDTreeNode.cpp
+					KDTreeNode.cpp \
+					PointCloud.cpp
           
 DESTDIR = .
 

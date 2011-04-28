@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 
+#include "Vec3D.h"
 #include "Vertex.h"
 #include "Triangle.h"
 #include "Edge.h"
@@ -42,6 +43,11 @@ public:
     void collectOrderedOneRing (std::vector<std::vector<unsigned int> > & oneRing) const;
     void computeDualEdgeMap (EdgeMapIndex & dualVMap1, EdgeMapIndex & dualVMap2);
     void markBorderEdges (EdgeMapIndex & edgeMap);
+
+		/**
+		 * Translate mesh by the given vector
+		 */
+		void translate (const Vec3Df & v);
     
     void renderGL (bool flat) const;
     

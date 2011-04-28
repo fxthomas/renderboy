@@ -213,3 +213,7 @@ void Mesh::loadOFF (const std::string & filename) {
     input.close ();
     recomputeSmoothVertexNormals (0);
 }
+
+void Mesh::translate (const Vec3Df & v) {
+	for (vector<Vertex>::iterator vr = vertices.begin(); vr != vertices.end(); vr++) vr->setPos (vr->getPos() + v);
+}

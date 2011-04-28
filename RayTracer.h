@@ -15,7 +15,9 @@
 #include <QObject>
 #include <QTime>
 
+#include "PointCloud.hpp"
 #include "Camera.hpp"
+#include "Material.h"
 #include "Vec3D.h"
 #include "KDTreeNode.hpp"
 
@@ -31,12 +33,18 @@ class RayTracer : public QThread {
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
-    Vec3Df raytraceSingle (unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, vector <vector<Vec3Df> > rand_lpoints);
+		Vec3Df getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat);
+		Vec3Df lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug);
+		Vec3Df lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, int d);
+    Vec3Df raytraceSingle (const PointCloud & pc, unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, vector <vector<Vec3Df> > rand_lpoints);
     QImage render ();
     BoundingBox debug (unsigned int i, unsigned int j);
 
 		void setCamera (const Camera _cam) { cam = _cam; }
 		const Camera & getCamera () const { return cam; }
+
+		void setDepth (const int d) { depth = d; }
+		int getDepth () const { return depth; }
 
 	signals:
 		void init (int min, int max);
@@ -44,7 +52,7 @@ class RayTracer : public QThread {
 		void finished (const QImage & pixm);
     
 	protected:
-    inline RayTracer (QObject* parent = 0) : QThread(parent) { }
+    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(8) { }
     inline virtual ~RayTracer () {}
 		virtual void run() { 
 			cout << " (I) RayTracer: Starting thread" << endl;
@@ -63,6 +71,7 @@ class RayTracer : public QThread {
     Vec3Df backgroundColor;
 		Camera cam;
 		QImage renderedimage;
+		int depth;
 };
 
 
