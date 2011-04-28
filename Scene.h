@@ -70,6 +70,15 @@ class Scene : public QObject {
 			}
 			cout << endl;
 		}
+		void setAntiAliasing (bool b){
+			if (!b){
+				cout<<"Anti-Aliasing will be disabled..."<<endl;
+			}
+			else{
+				cout<<"Anti-Aliasing will be enabled..."<<endl;
+			}
+			bbox.setAliasing(b);
+		}
 };
 
 

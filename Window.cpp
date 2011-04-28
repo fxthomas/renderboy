@@ -199,6 +199,10 @@ void Window::initControlWidget () {
 	connect (radiusSlider, SIGNAL (valueChanged(int)), Scene::getInstance(), SLOT (setRadius(int)));
 	rayLayout->addWidget (radiusSlider);
 
+	QCheckBox * aliasingBox = new QCheckBox ("Anti-Aliasing", rayGroupBox);
+	connect (aliasingBox, SIGNAL (toggled (bool)), Scene::getInstance(), SLOT (setAntiAliasing (bool)));
+	rayLayout->addWidget (aliasingBox);
+
 	QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
 	rayLayout->addWidget (rayButton);
 	connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
@@ -207,6 +211,7 @@ void Window::initControlWidget () {
 	QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
 	connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
 	rayLayout->addWidget (saveButton);
+	
 
 	progressbar = new QProgressBar (rayGroupBox);
 	rayLayout->addWidget (progressbar);

@@ -33,10 +33,11 @@ class RayTracer : public QThread {
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
+    
 		Vec3Df getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, unsigned int nb_iter, const vector<vector<Vec3Df> > & rand_lpoints);
 		Vec3Df lightModel (const Vec3Df & eye, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, unsigned int nb_iter, const vector<vector<Vec3Df> > & rand_lpoints);
 		Vec3Df lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec3Df & point, const Vec3Df & normal, const Material & mat, const PointCloud & pc, bool debug, int d, unsigned int nb_iter, const vector<vector<Vec3Df> > & rand_lpoints);
-    Vec3Df raytraceSingle (const PointCloud & pc, unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints);
+    Vec3Df raytraceSingle (const PointCloud & pc, float i, float j, bool debug, BoundingBox & bb, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints);
     QImage render ();
     BoundingBox debug (unsigned int i, unsigned int j);
 
@@ -50,9 +51,10 @@ class RayTracer : public QThread {
 		void init (int min, int max);
 		void progress (int val);
 		void finished (const QImage & pixm);
+
     
 	protected:
-    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(4) { }
+    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(4), anti_aliasing(0) { }
     inline virtual ~RayTracer () {}
 		virtual void run() { 
 			cout << " (I) RayTracer: Starting thread" << endl;
@@ -72,6 +74,7 @@ class RayTracer : public QThread {
 		Camera cam;
 		QImage renderedimage;
 		int depth;
+		int anti_aliasing;
 };
 
 

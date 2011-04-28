@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Vec3D.h"
 
+using namespace std;
+
 const float BOUNDINGBOX_EPSILON = 0.0001f;
 
 class BoundingBox {
@@ -203,6 +205,12 @@ public:
 			glPopMatrix();
 		}
 
+    inline void setAliasing(const bool b) { 
+	anti_aliasing=b;
+	cout<<"done"<<endl;
+	}
+    inline bool getAliasing(void) { return(anti_aliasing);}
+
 private:
     inline float getWHL (unsigned int i) const {
         return (maxBb[i] - minBb[i]);
@@ -216,6 +224,7 @@ private:
 
 
     Vec3Df minBb, maxBb;
+    bool anti_aliasing;
 };
 
 #endif // BOUNDINGBOX_H

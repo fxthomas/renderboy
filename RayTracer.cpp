@@ -9,7 +9,7 @@
 #include "Ray.h"
 #include "Scene.h"
 
-#define NB_RAY 64
+#define NB_RAY 8
 
 static RayTracer * instance = NULL;
 
@@ -228,7 +228,7 @@ Vec3Df RayTracer::lightBounce (const Vec3Df & eye, const Vec3Df & dir, const Vec
 /**
  * Raytrace a single point
  */
-Vec3Df RayTracer::raytraceSingle (const PointCloud & pc, unsigned int i, unsigned int j, bool debug, BoundingBox & bb, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
+Vec3Df RayTracer::raytraceSingle (const PointCloud & pc, float i, float j, bool debug, BoundingBox & bb, unsigned int nb_iter, const vector <vector<Vec3Df> > & rand_lpoints) {
 	Scene * scene = Scene::getInstance ();
 	
 	const Vec3Df camPos = cam.position();
@@ -349,24 +349,52 @@ QImage RayTracer::render () {
 		num_light++;
 	} 
 
+	if (b.getAliasing()==1){
 #pragma omp parallel for default(shared) schedule(dynamic)
-	for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
-		emit progress (i);
 
-		for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
-			// Raytrace
-			Vec3Df c = raytraceSingle (pc/*PointCloud()*/, i, j, false, b, nb_iter, rand_lpoints);
-			
-			// Depth map
-			//float f = (c - cam.position()).getSquaredLength();
-			//image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (f, 0, 255), clamp (f, 0, 255), clamp (f, 0, 255)));
-			
-			// Computed lighting
-			image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
+
+		for (unsigned int i = 0; i < 2*(unsigned int)cam.screenWidth(); i++) {
+			if(i%2==0) emit progress (i);
+
+			for (unsigned int j = 0; j < 2*(unsigned int)cam.screenHeight(); j++) {
+				// Raytrace
+
+				if ((i%2==0)&&(j%2==0)){
+					Vec3Df c1 = raytraceSingle (pc/*PointCloud()*/, (float)i/2.0f, (float)j/2.0f, false, b, nb_iter, rand_lpoints);
+					Vec3Df c2 = raytraceSingle (pc/*PointCloud()*/, (float)(i-1)/2.0f, (float)j/2.0f, false, b, nb_iter, rand_lpoints);
+					Vec3Df c3 = raytraceSingle (pc/*PointCloud()*/, (float)i/2.0f, (float)(j-1)/2.0f, false, b, nb_iter, rand_lpoints);
+					Vec3Df c4 = raytraceSingle (pc/*PointCloud()*/, (float)(i-1)/2.0f, (float)(j-1)/2.0f, false, b, nb_iter, rand_lpoints);
+					Vec3Df c=(c1+c2+c3+c4)/4;
+				
+					// Depth map
+					//float f = (c - cam.position()).getSquaredLength();
+					//image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (f, 0, 255), clamp (f, 0, 255), clamp (f, 0, 255)));
+				
+					// Computed lighting
+				
+					image.setPixel (i/2, ((cam.screenHeight()-1)-j/2), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
+				}
+			}
 		}
 	}
+	else {
+		for (unsigned int i = 0; i < (unsigned int)cam.screenWidth(); i++) {
+			emit progress (i);
 
-	// Return image
+			for (unsigned int j = 0; j < (unsigned int)cam.screenHeight(); j++) {
+				// Raytrace
+				Vec3Df c = raytraceSingle (pc/*PointCloud()*/, i, j, false, b, nb_iter, rand_lpoints);
+				
+				// Depth map
+				//float f = (c - cam.position()).getSquaredLength();
+				//image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (f, 0, 255), clamp (f, 0, 255), clamp (f, 0, 255)));
+				
+				// Computed lighting
+				image.setPixel (i, ((cam.screenHeight()-1)-j), qRgb (clamp (c[0]*255., 0, 255), clamp (c[1]*255., 0, 255), clamp (c[2]*255., 0, 255)));
+			}
+		}
+	}
+		// Return image
 	cout << " (R) Raytracing done! (" << timer.elapsed() << " ms)" << endl;
 	return image;
 }
@@ -412,3 +440,5 @@ BoundingBox RayTracer::debug (unsigned int i, unsigned int j) {
 	raytraceSingle (PointCloud(), i, j, true, bb, nb_iter, rand_lpoints);
 	return bb;
 }
+
+
