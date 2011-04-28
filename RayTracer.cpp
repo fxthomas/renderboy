@@ -37,7 +37,8 @@ Vec3Df RayTracer::getColor (const Vec3Df & eye, const Vec3Df & point, const Vec3
 	vv.normalize();
 
 	for (vector<Light>::iterator light = Scene::getInstance()->getLights().begin(); light != Scene::getInstance()->getLights().end(); light++) {
-		lpos = cam.toWorld (light->getPos());
+		//lpos = cam.toWorld (light->getPos());
+		lpos = light->getPos();
 		lm = lpos - point;
 		lm.normalize();
 
