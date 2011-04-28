@@ -52,7 +52,7 @@ class RayTracer : public QThread {
 		void finished (const QImage & pixm);
     
 	protected:
-    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(0) { }
+    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(4) { }
     inline virtual ~RayTracer () {}
 		virtual void run() { 
 			cout << " (I) RayTracer: Starting thread" << endl;

@@ -25,7 +25,7 @@ void Scene::destroyInstance () {
 }
 
 Scene::Scene () {
-    buildDefaultScene (false);
+    buildDefaultScene (true);
     updateBoundingBox ();
 }
 
@@ -45,14 +45,6 @@ void Scene::updateBoundingBox () {
 // Changer ce code pour créer des scènes originales
 void Scene::buildDefaultScene (bool HD) {
 	cout << " (I) Building Default Scene..." << endl;
-	// Create ground
-	/*Mesh groundMesh;
-	if (HD)
-		groundMesh.loadOFF ("models/ground_HD.off");
-	else
-		groundMesh.loadOFF ("models/ground.off");
-	Object ground (groundMesh,planeMat);    
-	objects.push_back (ground);*/
 
 	// Create basic materials
 	Material groundMat (1.f, 0.f, 1.f, Vec3Df (.1f, .1f, .1f), 1.f, 0.f, 0.f);
@@ -60,6 +52,24 @@ void Scene::buildDefaultScene (bool HD) {
 	Material glassMat2 (1.f, 1.f, 1.f, Vec3Df (.2f, 1.f, 0.f), 1.2f, 0.90f, 0.2f);
 	Material glassMat3 (1.f, 1.f, 1.f, Vec3Df (0.f, .2f, 1.f), 1.3f, 0.80f, 0.2f);
 	Material planeMat (1.f, 1.f, 1.f, Vec3Df (1.f, 1.f, 1.f), 1.f, 0.f, 0.0f);
+
+	// Create ground
+/*	Mesh groundMesh;
+	if (HD)
+		groundMesh.loadOFF ("models/ground_HD.off");
+	else
+		groundMesh.loadOFF ("models/ground.off");
+	Object ground (groundMesh,planeMat);    
+	objects.push_back (ground);
+
+	//Create ram
+	
+	Mesh ramMesh;
+	ramMesh.loadOFF ("models/ram_HD.off");
+	Object ram (ramMesh,glassMat1);    
+	objects.push_back (ram);
+
+*/
 
 
 	// Load meshes
@@ -85,6 +95,7 @@ void Scene::buildDefaultScene (bool HD) {
 	objects.push_back (glass3);
 	objects.push_back (plane);
 	//objects.push_back (sphere);
+
 
 	// Create lights
 	Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(-1.0f, -1.0f, -1.0f));
