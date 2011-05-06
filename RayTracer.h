@@ -54,7 +54,7 @@ class RayTracer : public QThread {
 
     
 	protected:
-    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(4), anti_aliasing(0) { }
+    inline RayTracer (QObject* parent = 0) : QThread(parent), depth(8), anti_aliasing(0) { }
     inline virtual ~RayTracer () {}
 		virtual void run() { 
 			cout << " (I) RayTracer: Starting thread" << endl;

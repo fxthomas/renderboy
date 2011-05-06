@@ -17,7 +17,7 @@
 
 class Material {
 public:
-    inline Material () : diffuse (0.8f), specular (0.2f), shine (1.0f), color (0.5f, 0.5f, 0.5f), ior(1.0f), refract(0.0f), reflect(0.0) {}
+    inline Material () : diffuse (0.8f), specular (0.2f), shine (1.0f), color (0.5f, 0.5f, 0.5f), ior(1.0f), refract(0.0f), reflect(0.0f) {}
     inline Material (float diffuse, float specular, float shine, const Vec3Df & color, const float ior, const float refract, const float reflect)
         : diffuse (diffuse), specular (specular), shine (shine), color (color), ior (ior), refract (refract), reflect (reflect) {}
     virtual ~Material () {}

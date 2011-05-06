@@ -43,12 +43,12 @@ class PointCloud {
 		inline void clear () { surfels.clear(); }
 		inline void add (Surfel s) { surfels.push_back (s); }
 		inline void add (const Object & o, const Camera & cam) {
-			for (vector<Triangle>::const_iterator it = o.getMesh().getTriangles().begin(); it != o.getMesh().getTriangles().end(); it++) {
-				if (rand() % 2000 < 1990) continue;
-
-				Vec3Df v0 = o.getMesh().getVertices()[it->getVertex(0)].getPos();
-				Vec3Df v1 = o.getMesh().getVertices()[it->getVertex(1)].getPos();
-				Vec3Df v2 = o.getMesh().getVertices()[it->getVertex(2)].getPos();
+			const unsigned int MAX_POINT = 100;
+			for (unsigned int i = 0; i < MAX_POINT && i < (unsigned int)(o.getMesh().getTriangles().size()); i++) {
+				Triangle it = o.getMesh().getTriangles ()[rand()%o.getMesh().getTriangles().size()];
+				Vec3Df v0 = o.getMesh().getVertices()[it.getVertex(0)].getPos();
+				Vec3Df v1 = o.getMesh().getVertices()[it.getVertex(1)].getPos();
+				Vec3Df v2 = o.getMesh().getVertices()[it.getVertex(2)].getPos();
 				Vec3Df u = v1 - v0;
 				Vec3Df v = v2 - v0;
 

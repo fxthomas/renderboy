@@ -9,7 +9,7 @@
 #include "Ray.h"
 #include "Scene.h"
 
-#define NB_RAY 8
+#define NB_RAY 64
 
 static RayTracer * instance = NULL;
 
@@ -354,7 +354,7 @@ QImage RayTracer::render () {
 
 
 		for (unsigned int i = 0; i < 2*(unsigned int)cam.screenWidth(); i++) {
-			if(i%2==0) emit progress (i);
+			emit progress (i/2);
 
 			for (unsigned int j = 0; j < 2*(unsigned int)cam.screenHeight(); j++) {
 				// Raytrace
@@ -396,6 +396,7 @@ QImage RayTracer::render () {
 	}
 		// Return image
 	cout << " (R) Raytracing done! (" << timer.elapsed() << " ms)" << endl;
+	emit progress ((unsigned int)cam.screenWidth());
 	return image;
 }
 
