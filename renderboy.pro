@@ -118,7 +118,7 @@ unix {
   INCLUDEPATH *= $${INCLUDE_DIR}
   DEPENDPATH  *= $${INCLUDE_DIR}
   isEmpty( QGLVIEWER_STATIC ) {
-    LIBS *= -L$${LIB_DIR} -lQGLViewer 
+    LIBS *= -L$${LIB_DIR} -lQGLViewer -lGLU
   } else {
     LIBS *= $${LIB_DIR}/$${LIB_NAME}
   }
